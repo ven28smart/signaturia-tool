@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { FileSignature, Upload, Settings, History, Home } from 'lucide-react';
+import { FileSignature, Upload, Settings, History, Home, Menu, X } from 'lucide-react';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 const Navigation = () => {
   const navItems = [
@@ -46,14 +47,36 @@ const Navigation = () => {
             </div>
           </div>
           
-          <div className="md:hidden flex items-center">
-            {/* Mobile menu button */}
-            <button className="glass-button p-2 rounded-md text-gray-700 dark:text-gray-300">
-              <span className="sr-only">Open main menu</span>
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
+          <div className="md:hidden">
+            <Sheet>
+              <SheetTrigger asChild>
+                <button className="p-2 rounded-md text-gray-700 dark:text-gray-300">
+                  <span className="sr-only">Open main menu</span>
+                  <Menu className="h-6 w-6" />
+                </button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[250px] sm:w-[300px]">
+                <div className="py-4">
+                  <div className="px-2 pt-2 pb-4 space-y-1">
+                    {navItems.map((item) => (
+                      <NavLink
+                        key={item.path}
+                        to={item.path}
+                        className={({ isActive }) => cn(
+                          "block px-3 py-2 rounded-md text-base font-medium flex items-center",
+                          isActive
+                            ? "text-primary bg-primary/10"
+                            : "text-gray-700 hover:text-primary dark:text-gray-300 dark:hover:text-white"
+                        )}
+                      >
+                        <span className="mr-3">{item.icon}</span>
+                        <span>{item.name}</span>
+                      </NavLink>
+                    ))}
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </div>
