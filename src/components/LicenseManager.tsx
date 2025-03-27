@@ -41,10 +41,20 @@ const LicenseManager: React.FC = () => {
   // which isn't truly secure but demonstrates the concept
   const handleActivateLicense = (licenseKey: string) => {
     try {
+      console.log('Attempting to activate license with key:', licenseKey);
+      
+      // Perform basic validation first
+      if (!licenseKey || licenseKey.trim() === '') {
+        toast.error('Please enter a valid license key');
+        return;
+      }
+      
+      // Validate the license key
       const validationResult = validateLicenseKey(licenseKey);
       
       if (!validationResult.isValid) {
         toast.error('Invalid license key. Please check and try again.');
+        console.error('License validation failed');
         return;
       }
       
@@ -65,6 +75,7 @@ const LicenseManager: React.FC = () => {
         features: ['Digital Signatures', 'Certificate Management', 'Audit Logs']
       };
       
+      console.log('Activating license:', newLicense);
       setLicense(newLicense);
       toast.success('License activated successfully');
     } catch (error) {

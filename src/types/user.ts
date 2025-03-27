@@ -101,36 +101,75 @@ export const validateLicenseKey = (licenseKey: string): {
   try {
     // Clean and decode the license key
     const cleanKey = licenseKey.replace(/-/g, "");
-    const decodedString = atob(cleanKey.toLowerCase());
     
-    // Parse the components
-    const [organizationId, expiryTimestamp, totalDocumentsStr] = decodedString.split(":");
-    
-    // Validate that we have all required parts and they're valid
-    if (!organizationId || !expiryTimestamp || !totalDocumentsStr) {
+    // Basic format validation
+    if (!cleanKey || cleanKey.length < 10) {
+      console.error('License key too short or empty');
       return { isValid: false };
     }
     
+    let decodedString;
+    try {
+      decodedString = atob(cleanKey.toLowerCase());
+    } catch (e) {
+      console.error('Failed to decode license key:', e);
+      return { isValid: false };
+    }
+    
+    // Parse the components
+    const parts = decodedString.split(":");
+    if (parts.length !== 3) {
+      console.error('License key has invalid format');
+      return { isValid: false };
+    }
+    
+    const [organizationId, expiryTimestamp, totalDocumentsStr] = parts;
+    
+    // Validate that we have all required parts
+    if (!organizationId || !expiryTimestamp || !totalDocumentsStr) {
+      console.error('License key missing required components');
+      return { isValid: false };
+    }
+    
+    // Parse the expiry timestamp
     const expiryTimestampNum = parseInt(expiryTimestamp);
     if (isNaN(expiryTimestampNum)) {
+      console.error('Invalid expiry timestamp in license key');
       return { isValid: false };
     }
     
     const expiryDate = new Date(expiryTimestampNum);
     if (expiryDate.toString() === "Invalid Date") {
+      console.error('Invalid date format in license key');
       return { isValid: false };
     }
     
+    // Parse the document limit
     const totalDocuments = parseInt(totalDocumentsStr);
     if (isNaN(totalDocuments)) {
+      console.error('Invalid document limit in license key');
       return { isValid: false };
     }
     
-    // Validate expiry date
+    // For testing purposes, let's be more lenient with expiration
+    // In a real application, you'd want strict validation
     const now = new Date();
     if (expiryDate < now) {
-      return { isValid: false };
+      console.error('License key has expired');
+      return { 
+        isValid: false,
+        organizationId,
+        expiryDate,
+        totalDocuments
+      };
     }
+    
+    // If we made it here, the license key is valid
+    console.log('License key validated successfully:', {
+      organizationId,
+      expiryDate: expiryDate.toISOString(),
+      totalDocuments
+    });
     
     return {
       isValid: true,
