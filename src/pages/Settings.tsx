@@ -32,7 +32,7 @@ const Settings = () => {
   
   const [orgId, setOrgId] = useState('demo-org-123');
   const [expiryDays, setExpiryDays] = useState(30);
-  const [docLimit, setDocLimit] = useState(100);
+  const [docLimit, setDocLimit] = useState(10000);
   const [generatedKey, setGeneratedKey] = useState('');
   
   const handleSaveSettings = (e: React.FormEvent) => {
