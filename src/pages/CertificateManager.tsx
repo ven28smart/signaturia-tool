@@ -179,13 +179,13 @@ const CertificateManager = () => {
         transition={{ duration: 0.4 }}
       >
         <div className="flex items-center mb-6">
-          <div className="p-2 bg-primary/10 rounded-full mr-3">
-            <FileCheck className="w-6 h-6 text-primary" />
+          <div className="p-2 bg-primary-50 rounded-full mr-3">
+            <FileCheck className="w-6 h-6 text-primary-500" />
           </div>
           <h1 className="text-3xl font-bold">Certificate Manager</h1>
         </div>
 
-        <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md shadow-sm mb-6">
+        <Card className="bg-white dark:bg-gray-800 shadow-sm mb-6">
           <CardHeader className="pb-2">
             <CardTitle>Digital Certificates</CardTitle>
             <CardDescription>
@@ -194,7 +194,7 @@ const CertificateManager = () => {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="certificates" className="w-full">
-              <TabsList className="w-full">
+              <TabsList className="w-full mb-4">
                 <TabsTrigger value="certificates" className="flex-1">Certificates</TabsTrigger>
                 <TabsTrigger value="add" className="flex-1">Add Certificate</TabsTrigger>
               </TabsList>
@@ -223,11 +223,11 @@ const CertificateManager = () => {
                       >
                         <div className="flex justify-between">
                           <div className="flex items-start gap-3">
-                            <div className="p-2 bg-primary/10 rounded-full">
+                            <div className="p-2 bg-primary-50 rounded-full">
                               {cert.type === 'pkcs12' ? (
-                                <FileCheck className="w-5 h-5 text-primary" />
+                                <FileCheck className="w-5 h-5 text-primary-500" />
                               ) : (
-                                <Server className="w-5 h-5 text-primary" />
+                                <Server className="w-5 h-5 text-primary-500" />
                               )}
                             </div>
                             <div>
@@ -303,7 +303,7 @@ const CertificateManager = () => {
                       
                       <div className="space-y-2">
                         <Label htmlFor="certificate-file">Certificate File (.p12 or .pfx)</Label>
-                        <div className="border-2 border-dashed rounded-lg p-6 text-center border-gray-300 dark:border-gray-700">
+                        <div className="border-2 border-dashed rounded-lg p-6 text-center border-gray-200 dark:border-gray-700">
                           {file ? (
                             <div className="space-y-2">
                               <CheckCircle className="w-8 h-8 text-green-500 mx-auto" />
@@ -352,7 +352,7 @@ const CertificateManager = () => {
                       </div>
                       
                       <div className="flex justify-end">
-                        <Button type="submit" className="gap-2" disabled={isUploading}>
+                        <Button type="submit" className="gap-2 bg-primary-500 hover:bg-primary-600" disabled={isUploading}>
                           {isUploading ? (
                             <>
                               <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
@@ -413,7 +413,7 @@ const CertificateManager = () => {
                       </div>
                       
                       <div className="flex justify-end">
-                        <Button type="submit" className="gap-2" disabled={isTestingConnection}>
+                        <Button type="submit" className="gap-2 bg-primary-500 hover:bg-primary-600" disabled={isTestingConnection}>
                           {isTestingConnection ? (
                             <>
                               <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
@@ -433,7 +433,7 @@ const CertificateManager = () => {
               </TabsContent>
             </Tabs>
           </CardContent>
-          <CardFooter className="border-t px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50 flex items-start gap-2 text-sm text-gray-600 dark:text-gray-300">
+          <CardFooter className="border-t px-6 py-4 bg-gray-50 dark:bg-gray-800/50 flex items-start gap-2 text-sm text-gray-600 dark:text-gray-300">
             <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
             <p>
               Certificates are used to digitally sign documents. PKCS #12 certificates are stored securely, 

@@ -27,7 +27,17 @@ export default {
 				foreground: 'hsl(var(--foreground))',
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
+					foreground: 'hsl(var(--primary-foreground))',
+					50: '#e6f2ff',
+					100: '#cce5ff',
+					200: '#99cbff',
+					300: '#66b0ff',
+					400: '#3396ff',
+					500: '#007BFF', // Main primary color from Leegality brand
+					600: '#0062cc',
+					700: '#004a99',
+					800: '#003166',
+					900: '#001833',
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
