@@ -16,24 +16,24 @@
     --popover: 0 0% 100%;
     --popover-foreground: 220 25% 20%;
 
-    --primary: 210 100% 50%; /* Leegality blue */
+    --primary: 262 85% 74%; /* Leegality purple */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96%;
+    --secondary: 262 25% 96%;
     --secondary-foreground: 220 25% 20%;
 
     --muted: 220 14% 96%;
     --muted-foreground: 220 8% 46%;
 
-    --accent: 210 100% 97%;
-    --accent-foreground: 210 100% 50%;
+    --accent: 262 85% 97%;
+    --accent-foreground: 262 85% 74%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 210 100% 50%;
+    --ring: 262 85% 74%;
 
     --radius: 0.5rem; /* Adjusted to match Leegality's design system */
   }
@@ -48,7 +48,7 @@
     --popover: 220 25% 15%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 210 100% 50%;
+    --primary: 262 85% 74%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 220 25% 20%;
@@ -57,15 +57,15 @@
     --muted: 220 25% 20%;
     --muted-foreground: 220 20% 70%;
 
-    --accent: 210 100% 20%;
-    --accent-foreground: 210 100% 98%;
+    --accent: 262 85% 20%;
+    --accent-foreground: 262 85% 98%;
 
     --destructive: 0 63% 31%;
     --destructive-foreground: 0 0% 98%;
 
     --border: 220 25% 26%;
     --input: 220 25% 26%;
-    --ring: 210 100% 60%;
+    --ring: 262 85% 60%;
   }
 }
 

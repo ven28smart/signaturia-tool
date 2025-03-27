@@ -28,16 +28,16 @@ export default {
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
 					foreground: 'hsl(var(--primary-foreground))',
-					50: '#e6f2ff',
-					100: '#cce5ff',
-					200: '#99cbff',
-					300: '#66b0ff',
-					400: '#3396ff',
-					500: '#007BFF', // Main primary color from Leegality brand
-					600: '#0062cc',
-					700: '#004a99',
-					800: '#003166',
-					900: '#001833',
+					50: '#f5f0ff',
+					100: '#ebe0ff',
+					200: '#d7c2ff',
+					300: '#c2a3ff',
+					400: '#ad85ff',
+					500: '#9b87f5', // Main primary color from Leegality brand (purple)
+					600: '#7c6bc6',
+					700: '#5d5097',
+					800: '#3e3664',
+					900: '#1f1b32',
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
@@ -64,17 +64,17 @@ export default {
 					foreground: 'hsl(var(--card-foreground))'
 				},
 				// Leegality specific colors
-				'leegality-blue': {
-					50: '#e6f2ff',
-					100: '#cce5ff', 
-					200: '#99cbff',
-					300: '#66b0ff',
-					400: '#3396ff',
-					500: '#007BFF', // Main blue
-					600: '#0062cc',
-					700: '#004a99',
-					800: '#003166',
-					900: '#001833',
+				'leegality-purple': {
+					50: '#f5f0ff',
+					100: '#ebe0ff',
+					200: '#d7c2ff',
+					300: '#c2a3ff',
+					400: '#ad85ff',
+					500: '#9b87f5', // Main purple
+					600: '#7c6bc6',
+					700: '#5d5097',
+					800: '#3e3664',
+					900: '#1f1b32',
 				},
 				'leegality-gray': {
 					50: '#f9fafb',
