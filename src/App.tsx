@@ -11,27 +11,32 @@ import SignDocument from "./pages/SignDocument";
 import CertificateManager from "./pages/CertificateManager";
 import AuditLogs from "./pages/AuditLogs";
 import Settings from "./pages/Settings";
+import { UserProvider } from "./contexts/UserContext";
+import UserManagement from "./pages/UserManagement";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <BrowserRouter>
-        <Toaster />
-        <Sonner />
-        <Routes>
-          <Route element={<Layout />}>
-            <Route path="/" element={<Index />} />
-            <Route path="/sign" element={<SignDocument />} />
-            <Route path="/certificates" element={<CertificateManager />} />
-            <Route path="/audit" element={<AuditLogs />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="*" element={<NotFound />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <UserProvider>
+      <TooltipProvider>
+        <BrowserRouter>
+          <Toaster />
+          <Sonner />
+          <Routes>
+            <Route element={<Layout />}>
+              <Route path="/" element={<Index />} />
+              <Route path="/sign" element={<SignDocument />} />
+              <Route path="/certificates" element={<CertificateManager />} />
+              <Route path="/audit" element={<AuditLogs />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/users" element={<UserManagement />} />
+              <Route path="*" element={<NotFound />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </UserProvider>
   </QueryClientProvider>
 );
 

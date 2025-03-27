@@ -2,17 +2,26 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { FileSignature, Upload, Settings, History, Home, Menu, X } from 'lucide-react';
+import { FileSignature, Upload, Settings, History, Home, Menu, X, Users } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { useUser } from '@/contexts/UserContext';
 
 const Navigation = () => {
+  const { hasPermission } = useUser();
+  
   const navItems = [
     { name: 'Home', path: '/', icon: <Home className="w-5 h-5" /> },
-    { name: 'Sign Document', path: '/sign', icon: <FileSignature className="w-5 h-5" /> },
-    { name: 'Certificate Manager', path: '/certificates', icon: <Upload className="w-5 h-5" /> },
-    { name: 'Audit Logs', path: '/audit', icon: <History className="w-5 h-5" /> },
-    { name: 'Settings', path: '/settings', icon: <Settings className="w-5 h-5" /> },
+    { name: 'Sign Document', path: '/sign', icon: <FileSignature className="w-5 h-5" />, permission: 'sign_documents' },
+    { name: 'Certificate Manager', path: '/certificates', icon: <Upload className="w-5 h-5" />, permission: 'manage_certificates' },
+    { name: 'Audit Logs', path: '/audit', icon: <History className="w-5 h-5" />, permission: 'view_audit' },
+    { name: 'User Management', path: '/users', icon: <Users className="w-5 h-5" />, permission: 'manage_users' },
+    { name: 'Settings', path: '/settings', icon: <Settings className="w-5 h-5" />, permission: 'manage_settings' },
   ];
+
+  // Filter nav items based on user permissions
+  const filteredNavItems = navItems.filter(item => 
+    !item.permission || hasPermission(item.permission)
+  );
 
   return (
     <nav className="fixed top-0 z-10 w-full bg-white/80 dark:bg-black/80 backdrop-blur-lg border-b border-gray-200 dark:border-gray-800">
@@ -29,7 +38,7 @@ const Navigation = () => {
           
           <div className="hidden md:block">
             <div className="ml-10 flex items-center space-x-4">
-              {navItems.map((item) => (
+              {filteredNavItems.map((item) => (
                 <NavLink
                   key={item.path}
                   to={item.path}
@@ -58,7 +67,7 @@ const Navigation = () => {
               <SheetContent side="right" className="w-[250px] sm:w-[300px]">
                 <div className="py-4">
                   <div className="px-2 pt-2 pb-4 space-y-1">
-                    {navItems.map((item) => (
+                    {filteredNavItems.map((item) => (
                       <NavLink
                         key={item.path}
                         to={item.path}
