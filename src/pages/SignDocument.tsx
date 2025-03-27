@@ -47,7 +47,6 @@ const SignDocument = () => {
         return;
       }
       setFile(selectedFile);
-      // Generate a random document ID
       setDocumentId(`DOC-${Math.floor(Math.random() * 1000000).toString().padStart(6, '0')}`);
     }
   };
@@ -75,8 +74,6 @@ const SignDocument = () => {
       return;
     }
 
-    // Check license before proceeding
-    // @ts-ignore
     const licenseValid = window.checkLicenseForSigning && window.checkLicenseForSigning();
     
     if (!licenseValid) {
@@ -86,12 +83,37 @@ const SignDocument = () => {
     
     setIsProcessing(true);
     
-    // Mock signing process
     setTimeout(() => {
       setIsProcessing(false);
       setSignedFile('signed_document.pdf');
       toast.success('Document signed successfully');
     }, 2000);
+  };
+
+  const handleDownloadDocument = () => {
+    if (!signedFile) {
+      toast.error('No signed document available for download');
+      return;
+    }
+
+    try {
+      const blob = new Blob(['This is a sample signed document'], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `signed_document_${documentId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast.success('Document downloaded successfully');
+    } catch (error) {
+      console.error('Error downloading document:', error);
+      toast.error('Failed to download document');
+    }
   };
 
   return (
@@ -312,7 +334,7 @@ const SignDocument = () => {
                       </div>
                     </div>
                     <div className="mt-6 space-x-3">
-                      <Button className="gap-2">
+                      <Button className="gap-2" onClick={handleDownloadDocument}>
                         <Download className="w-4 h-4" />
                         Download Signed Document
                       </Button>
