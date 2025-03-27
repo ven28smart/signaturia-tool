@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   FileUp, 
@@ -19,6 +20,7 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { motion } from "framer-motion";
 import LicenseManager from '@/components/LicenseManager';
+import { PDFDocument } from 'pdf-lib';
 
 interface SignaturePosition {
   page: number;
@@ -28,16 +30,26 @@ interface SignaturePosition {
   height: number;
 }
 
+declare global {
+  interface Window {
+    checkLicenseForSigning?: () => boolean;
+  }
+}
+
 const SignDocument = () => {
   const [file, setFile] = useState<File | null>(null);
   const [signatureSource, setSignatureSource] = useState('pkcs12');
   const [positions, setPositions] = useState<SignaturePosition[]>([
     { page: 1, x: 100, y: 100, width: 200, height: 100 }
   ]);
-  const [signedFile, setSignedFile] = useState<string | null>(null);
+  const [signedFile, setSignedFile] = useState<Uint8Array | null>(null);
+  const [signedFileUrl, setSignedFileUrl] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [documentId, setDocumentId] = useState('');
   const [showLicenseWarning, setShowLicenseWarning] = useState(false);
+  const [signatureText, setSignatureText] = useState('');
+  const [signatureReason, setSignatureReason] = useState('I approve this document');
+  const [signatureLocation, setSignatureLocation] = useState('');
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -67,7 +79,7 @@ const SignDocument = () => {
     setPositions(newPositions);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) {
       toast.error('Please select a PDF file');
@@ -83,38 +95,121 @@ const SignDocument = () => {
     
     setIsProcessing(true);
     
-    setTimeout(() => {
+    try {
+      // Read file as array buffer
+      const fileBuffer = await file.arrayBuffer();
+      
+      // Load the PDF document
+      const pdfDoc = await PDFDocument.load(fileBuffer);
+      
+      // Get the first page of the document
+      const pages = pdfDoc.getPages();
+      
+      // Add signature to all specified positions
+      for (const position of positions) {
+        const pageIndex = position.page - 1;
+        
+        // Make sure the page exists
+        if (pageIndex < 0 || pageIndex >= pages.length) {
+          continue;
+        }
+        
+        const page = pages[pageIndex];
+        const { width, height } = page.getSize();
+        
+        // Draw a signature box
+        page.drawRectangle({
+          x: position.x,
+          y: height - position.y - position.height, // Flip Y coordinate (PDF coordinates start from bottom)
+          width: position.width,
+          height: position.height,
+          borderWidth: 1,
+          borderColor: { r: 0, g: 0, b: 0 },
+          color: { r: 0.9, g: 0.9, b: 0.9, a: 0.3 },
+        });
+        
+        // Add signature text
+        const signatureDisplayText = signatureText || 'Digitally signed by: ' + signatureSource.toUpperCase();
+        page.drawText(signatureDisplayText, {
+          x: position.x + 10,
+          y: height - position.y - 30,
+          size: 10,
+        });
+        
+        // Add date
+        const dateText = `Date: ${new Date().toLocaleDateString()}`;
+        page.drawText(dateText, {
+          x: position.x + 10,
+          y: height - position.y - 45,
+          size: 8,
+        });
+        
+        // Add reason if specified
+        if (signatureReason) {
+          page.drawText(`Reason: ${signatureReason}`, {
+            x: position.x + 10,
+            y: height - position.y - 60,
+            size: 8,
+          });
+        }
+        
+        // Add location if specified
+        if (signatureLocation) {
+          page.drawText(`Location: ${signatureLocation}`, {
+            x: position.x + 10,
+            y: height - position.y - 75,
+            size: 8,
+          });
+        }
+      }
+      
+      // Save the modified PDF
+      const signedPdfBytes = await pdfDoc.save();
+      setSignedFile(signedPdfBytes);
+      
+      // Create a URL for the signed PDF
+      const blob = new Blob([signedPdfBytes], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      setSignedFileUrl(url);
+      
       setIsProcessing(false);
-      setSignedFile('signed_document.pdf');
       toast.success('Document signed successfully');
-    }, 2000);
+    } catch (error) {
+      console.error('Error signing document:', error);
+      setIsProcessing(false);
+      toast.error('Failed to sign document. Please try again.');
+    }
   };
 
   const handleDownloadDocument = () => {
-    if (!signedFile) {
+    if (!signedFileUrl) {
       toast.error('No signed document available for download');
       return;
     }
-
+    
     try {
-      const blob = new Blob(['This is a sample signed document'], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      
       const a = document.createElement('a');
-      a.href = url;
+      a.href = signedFileUrl;
       a.download = `signed_document_${documentId}.pdf`;
       document.body.appendChild(a);
       a.click();
-      
-      window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
       
-      toast.success('Document downloaded successfully');
+      toast.success('Signed document downloaded successfully');
     } catch (error) {
       console.error('Error downloading document:', error);
       toast.error('Failed to download document');
     }
   };
+
+  // Clean up URL objects when component unmounts
+  useEffect(() => {
+    return () => {
+      if (signedFileUrl) {
+        URL.revokeObjectURL(signedFileUrl);
+      }
+    };
+  }, [signedFileUrl]);
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -194,6 +289,16 @@ const SignDocument = () => {
                             <Label htmlFor="hsm">HSM Device</Label>
                           </div>
                         </RadioGroup>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="signature-text">Signature Text (Optional)</Label>
+                        <Input 
+                          id="signature-text" 
+                          placeholder="Enter your signature text" 
+                          value={signatureText}
+                          onChange={(e) => setSignatureText(e.target.value)}
+                        />
                       </div>
 
                       <Tabs defaultValue="positions" className="w-full">
@@ -278,15 +383,21 @@ const SignDocument = () => {
                         <TabsContent value="advanced" className="pt-4 space-y-4">
                           <div className="space-y-2">
                             <Label htmlFor="signature-reason">Signature Reason</Label>
-                            <Input id="signature-reason" placeholder="I approve this document" />
+                            <Input 
+                              id="signature-reason" 
+                              placeholder="I approve this document" 
+                              value={signatureReason}
+                              onChange={(e) => setSignatureReason(e.target.value)}
+                            />
                           </div>
                           <div className="space-y-2">
                             <Label htmlFor="signature-location">Signature Location</Label>
-                            <Input id="signature-location" placeholder="San Francisco, CA" />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="contact-info">Contact Information</Label>
-                            <Input id="contact-info" placeholder="john.doe@example.com" />
+                            <Input 
+                              id="signature-location" 
+                              placeholder="San Francisco, CA" 
+                              value={signatureLocation}
+                              onChange={(e) => setSignatureLocation(e.target.value)}
+                            />
                           </div>
                         </TabsContent>
                       </Tabs>
@@ -317,6 +428,19 @@ const SignDocument = () => {
                     <p className="text-gray-600 dark:text-gray-300">
                       Your document has been digitally signed and is ready to download
                     </p>
+                    
+                    {signedFileUrl && (
+                      <div className="mt-4 p-4 border rounded-lg">
+                        <div className="aspect-[3/4] bg-gray-50 dark:bg-gray-900 rounded overflow-hidden">
+                          <iframe 
+                            src={signedFileUrl} 
+                            title="Signed Document Preview" 
+                            className="w-full h-full border-0"
+                          />
+                        </div>
+                      </div>
+                    )}
+                    
                     <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 mt-4 text-left">
                       <div className="mb-2">
                         <span className="text-sm font-medium">Document ID:</span>{" "}
@@ -340,6 +464,7 @@ const SignDocument = () => {
                       </Button>
                       <Button variant="outline" onClick={() => {
                         setSignedFile(null);
+                        setSignedFileUrl(null);
                         setFile(null);
                       }}>
                         Sign Another Document
