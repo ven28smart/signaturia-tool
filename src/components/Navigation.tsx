@@ -29,20 +29,19 @@ const Navigation = () => {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <NavLink to="/" className="text-primary-500 font-bold text-xl flex items-center">
-                {/* Leegality logo SVG */}
+              <NavLink to="/" className="text-primary font-bold text-xl flex items-center">
                 <svg
                   className="w-8 h-8 mr-2"
-                  viewBox="0 0 32 32"
+                  viewBox="0 0 24 24"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                 >
                   <path
-                    d="M26.6667 5.33334H5.33334C3.86667 5.33334 2.68001 6.53334 2.68001 8.00001L2.66667 24C2.66667 25.4667 3.86667 26.6667 5.33334 26.6667H26.6667C28.1333 26.6667 29.3333 25.4667 29.3333 24V8.00001C29.3333 6.53334 28.1333 5.33334 26.6667 5.33334ZM26.6667 24H5.33334V16H26.6667V24ZM26.6667 12H5.33334V8.00001H26.6667V12Z"
-                    fill="#007BFF"
+                    d="M7 18H17V16H7V18ZM7 14H17V12H7V14ZM7 10H17V8H7V10ZM5 22C4.45 22 3.979 21.804 3.587 21.412C3.195 21.02 2.999 20.55 3 20V4C3 3.45 3.196 2.979 3.588 2.587C3.98 2.195 4.45 1.999 5 2H19C19.55 2 20.021 2.196 20.413 2.588C20.805 2.98 21.001 3.45 21 4V20C21 20.55 20.804 21.021 20.412 21.413C20.02 21.805 19.55 22.001 19 22H5ZM5 20H19V4H5V20Z"
+                    fill="currentColor"
                   />
                 </svg>
-                <span className="font-semibold">Leegality <span className="font-light">InfraSign</span></span>
+                <span>Document Signer</span>
               </NavLink>
             </div>
           </div>
@@ -56,8 +55,8 @@ const Navigation = () => {
                   className={({ isActive }) => cn(
                     "px-3 py-2 rounded-md text-sm font-medium flex items-center transition-all",
                     isActive
-                      ? "text-primary-500 bg-primary-50"
-                      : "text-gray-700 hover:text-primary-500 dark:text-gray-300 dark:hover:text-white"
+                      ? "text-primary bg-primary/10"
+                      : "text-gray-700 hover:text-primary dark:text-gray-300 dark:hover:text-white"
                   )}
                 >
                   <span className="mr-2">{item.icon}</span>
@@ -79,17 +78,17 @@ const Navigation = () => {
                 <div className="py-4">
                   <div className="flex items-center px-4 mb-6">
                     <svg
-                      className="w-8 h-8 mr-2 text-primary-500"
-                      viewBox="0 0 32 32"
+                      className="w-8 h-8 mr-2 text-primary"
+                      viewBox="0 0 24 24"
                       fill="none"
                       xmlns="http://www.w3.org/2000/svg"
                     >
                       <path
-                        d="M26.6667 5.33334H5.33334C3.86667 5.33334 2.68001 6.53334 2.68001 8.00001L2.66667 24C2.66667 25.4667 3.86667 26.6667 5.33334 26.6667H26.6667C28.1333 26.6667 29.3333 25.4667 29.3333 24V8.00001C29.3333 6.53334 28.1333 5.33334 26.6667 5.33334ZM26.6667 24H5.33334V16H26.6667V24ZM26.6667 12H5.33334V8.00001H26.6667V12Z"
+                        d="M7 18H17V16H7V18ZM7 14H17V12H7V14ZM7 10H17V8H7V10ZM5 22C4.45 22 3.979 21.804 3.587 21.412C3.195 21.02 2.999 20.55 3 20V4C3 3.45 3.196 2.979 3.588 2.587C3.98 2.195 4.45 1.999 5 2H19C19.55 2 20.021 2.196 20.413 2.588C20.805 2.98 21.001 3.45 21 4V20C21 20.55 20.804 21.021 20.412 21.413C20.02 21.805 19.55 22.001 19 22H5ZM5 20H19V4H5V20Z"
                         fill="currentColor"
                       />
                     </svg>
-                    <span className="font-semibold text-lg">Leegality <span className="font-light">InfraSign</span></span>
+                    <span className="font-semibold text-lg">Document Signer</span>
                   </div>
                   <div className="px-2 pt-2 pb-4 space-y-1">
                     {filteredNavItems.map((item) => (
@@ -99,8 +98,8 @@ const Navigation = () => {
                         className={({ isActive }) => cn(
                           "block px-3 py-2 rounded-md text-base font-medium flex items-center",
                           isActive
-                            ? "text-primary-500 bg-primary-50"
-                            : "text-gray-700 hover:text-primary-500 dark:text-gray-300 dark:hover:text-white"
+                            ? "text-primary bg-primary/10"
+                            : "text-gray-700 hover:text-primary dark:text-gray-300 dark:hover:text-white"
                         )}
                       >
                         <span className="mr-3">{item.icon}</span>
