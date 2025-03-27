@@ -107,7 +107,7 @@
     @apply bg-white rounded-lg border border-gray-100 shadow-sm p-6;
   }
   
-  /* Icon container styles */
+  /* Icon container styles from Figma */
   .leegality-icon-container {
     @apply p-3 bg-primary-50 rounded-full inline-flex items-center justify-center;
   }
@@ -117,12 +117,12 @@
     @apply py-12 rounded-xl;
   }
   
-  /* Feature item */
+  /* Feature item from Figma */
   .leegality-feature {
     @apply flex flex-col items-center text-center;
   }
   
-  /* Status badges */
+  /* Status badges per Figma */
   .leegality-status-success {
     @apply bg-success-100 text-success-800 border border-success-200 rounded-full px-2 py-0.5 text-xs font-medium;
   }
@@ -135,7 +135,7 @@
     @apply bg-error-100 text-error-800 border border-error-200 rounded-full px-2 py-0.5 text-xs font-medium;
   }
   
-  /* Form control */
+  /* Form control styles from Figma */
   .leegality-form-control {
     @apply space-y-2;
   }
@@ -148,13 +148,36 @@
     @apply block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500;
   }
   
-  /* CTA section */
+  /* CTA section per Figma */
   .leegality-cta {
     @apply bg-primary-50 dark:bg-primary-900/10 rounded-xl p-8 md:p-12 border border-primary-100 dark:border-primary-800/20 shadow-sm;
   }
+  
+  /* Table styles from Figma */
+  .leegality-table {
+    @apply w-full text-sm text-left;
+  }
+  
+  .leegality-table-header {
+    @apply bg-gray-50 dark:bg-gray-800/50 text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400;
+  }
+  
+  .leegality-table-cell {
+    @apply p-4 border-b border-gray-100 dark:border-gray-800;
+  }
+  
+  /* Pill styles from Figma */
+  .leegality-pill {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+  
+  /* Empty state from Figma */
+  .leegality-empty-state {
+    @apply flex flex-col items-center justify-center p-8 text-center;
+  }
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar per Figma */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
