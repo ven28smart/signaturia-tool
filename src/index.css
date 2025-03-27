@@ -80,35 +80,77 @@
   }
 
   h1 {
-    @apply text-3xl font-semibold tracking-tight;
+    @apply text-3xl font-semibold tracking-tight text-gray-900 dark:text-white;
   }
 
   h2 {
-    @apply text-2xl font-semibold tracking-tight;
+    @apply text-2xl font-semibold tracking-tight text-gray-900 dark:text-white;
   }
 
   h3 {
-    @apply text-xl font-semibold tracking-tight;
+    @apply text-xl font-semibold tracking-tight text-gray-900 dark:text-white;
   }
 
   h4 {
-    @apply text-lg font-semibold tracking-tight;
+    @apply text-lg font-semibold tracking-tight text-gray-900 dark:text-white;
   }
 
   p {
-    @apply leading-7;
+    @apply leading-7 text-gray-700 dark:text-gray-300;
   }
+}
 
-  .glass-panel {
-    @apply bg-white shadow-sm border border-gray-100 rounded-lg;
-  }
-
+/* Leegality specific components from design system */
+@layer components {
+  /* Card styles matching Figma design */
   .leegality-card {
-    @apply bg-white border border-gray-100 rounded-lg p-6 shadow-sm;
+    @apply bg-white rounded-lg border border-gray-100 shadow-sm p-6;
   }
-
-  .leegality-button {
-    @apply rounded-md font-medium transition-colors;
+  
+  /* Icon container styles */
+  .leegality-icon-container {
+    @apply p-3 bg-primary-50 rounded-full inline-flex items-center justify-center;
+  }
+  
+  /* Section container */
+  .leegality-section {
+    @apply py-12 rounded-xl;
+  }
+  
+  /* Feature item */
+  .leegality-feature {
+    @apply flex flex-col items-center text-center;
+  }
+  
+  /* Status badges */
+  .leegality-status-success {
+    @apply bg-success-100 text-success-800 border border-success-200 rounded-full px-2 py-0.5 text-xs font-medium;
+  }
+  
+  .leegality-status-pending {
+    @apply bg-warning-100 text-warning-800 border border-warning-200 rounded-full px-2 py-0.5 text-xs font-medium;
+  }
+  
+  .leegality-status-error {
+    @apply bg-error-100 text-error-800 border border-error-200 rounded-full px-2 py-0.5 text-xs font-medium;
+  }
+  
+  /* Form control */
+  .leegality-form-control {
+    @apply space-y-2;
+  }
+  
+  .leegality-form-label {
+    @apply block text-sm font-medium text-gray-700 dark:text-gray-300;
+  }
+  
+  .leegality-form-input {
+    @apply block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500;
+  }
+  
+  /* CTA section */
+  .leegality-cta {
+    @apply bg-primary-50 dark:bg-primary-900/10 rounded-xl p-8 md:p-12 border border-primary-100 dark:border-primary-800/20 shadow-sm;
   }
 }
 
@@ -129,69 +171,4 @@
 /* Smooth transitions */
 a, button, input, select, textarea {
   @apply transition-all duration-200;
-}
-
-/* Page transitions */
-.page-transition-enter {
-  opacity: 0;
-  transform: translateY(10px);
-}
-
-.page-transition-enter-active {
-  opacity: 1;
-  transform: translateY(0);
-  transition: opacity 300ms, transform 300ms;
-}
-
-.page-transition-exit {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.page-transition-exit-active {
-  opacity: 0;
-  transform: translateY(-10px);
-  transition: opacity 300ms, transform 300ms;
-}
-
-/* Leegality specific styles */
-.leegality-gradient {
-  @apply bg-gradient-to-r from-primary via-blue-500 to-blue-600;
-}
-
-.leegality-container {
-  @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
-}
-
-.leegality-section {
-  @apply py-10;
-}
-
-.leegality-card-hover {
-  @apply transition-all duration-300 hover:shadow-md hover:border-primary/20;
-}
-
-.leegality-input {
-  @apply rounded-md border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary;
-}
-
-.leegality-form-group {
-  @apply space-y-2;
-}
-
-/* Status indicators */
-.status-success {
-  @apply bg-green-100 text-green-800 border border-green-200 rounded-full px-2 py-0.5 text-xs font-medium;
-}
-
-.status-pending {
-  @apply bg-yellow-100 text-yellow-800 border border-yellow-200 rounded-full px-2 py-0.5 text-xs font-medium;
-}
-
-.status-error {
-  @apply bg-red-100 text-red-800 border border-red-200 rounded-full px-2 py-0.5 text-xs font-medium;
-}
-
-.status-info {
-  @apply bg-blue-100 text-blue-800 border border-blue-200 rounded-full px-2 py-0.5 text-xs font-medium;
 }
