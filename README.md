@@ -1,69 +1,231 @@
-# Welcome to your Lovable project
 
-## Project info
+# Digital Signature Tool
 
-**URL**: https://lovable.dev/projects/43afdf89-d72e-4974-abea-8cc9fb1be93e
+A secure, enterprise-grade application for digitally signing PDF documents using either PKCS #12 certificates or HSM devices.
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- PDF document signing with precise coordinate positioning
+- Support for both PKCS #12 certificates and HSM integration
+- Comprehensive audit logging of all signing activities
+- Enterprise-grade security and scalability
+- Clean, intuitive user interface
 
-**Use Lovable**
+## Implementation Overview
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/43afdf89-d72e-4974-abea-8cc9fb1be93e) and start prompting.
+This repository contains two components:
 
-Changes made via Lovable will be committed automatically to this repo.
+1. **Frontend Web Interface**: React-based UI for document upload, certificate management, and signing configuration
+2. **Java Backend Service**: The core document signing engine (described in this README)
 
-**Use your preferred IDE**
+## Backend Implementation
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+The backend is a Java application that handles the core functionality of PDF signing. This is the component that clients will deploy on their servers.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Technologies Used
 
-Follow these steps:
+- **Java 11+**: Core programming language
+- **Spring Boot**: Application framework
+- **iText 7/PDFBox**: PDF processing libraries
+- **Bouncy Castle**: Cryptography provider
+- **PKCS#11 Wrapper**: For HSM integration
+- **Hibernate/JPA**: For audit logging persistence
+- **JUnit 5**: For unit testing
+- **Maven**: Build and dependency management
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### Key Components
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+1. **SigningService**: Core service for document signing
+2. **CertificateService**: Manages certificates and HSM connections
+3. **AuditService**: Handles logging of signing activities
+4. **SecurityConfig**: Security configurations and validations
 
-# Step 3: Install the necessary dependencies.
-npm i
+### Installation Instructions
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+#### Prerequisites
+
+- Java 11 or higher
+- Maven 3.6 or higher
+- Database (MySQL, PostgreSQL, or H2 for testing)
+
+#### Deployment Steps
+
+1. Clone this repository:
+   ```
+   git clone https://github.com/yourusername/digital-signature-tool.git
+   cd digital-signature-tool/backend
+   ```
+
+2. Configure application properties:
+   Edit `src/main/resources/application.properties` to set:
+   - Database connection details
+   - HSM configuration (if applicable)
+   - Audit log retention period
+   - Other application settings
+
+3. Build the application:
+   ```
+   mvn clean package
+   ```
+
+4. Run the application:
+   ```
+   java -jar target/digital-signature-tool-1.0.0.jar
+   ```
+
+5. The service will be available at `http://localhost:8080`
+
+### Java Code Structure
+
+```
+src/
+├── main/
+│   ├── java/
+│   │   └── com/
+│   │       └── docsign/
+│   │           ├── Application.java
+│   │           ├── controller/
+│   │           │   ├── SigningController.java
+│   │           │   ├── CertificateController.java
+│   │           │   └── AuditController.java
+│   │           ├── service/
+│   │           │   ├── SigningService.java
+│   │           │   ├── CertificateService.java
+│   │           │   └── AuditService.java
+│   │           ├── model/
+│   │           │   ├── SignatureRequest.java
+│   │           │   ├── Certificate.java
+│   │           │   └── AuditRecord.java
+│   │           ├── repository/
+│   │           │   ├── CertificateRepository.java
+│   │           │   └── AuditRepository.java
+│   │           └── util/
+│   │               ├── SignatureUtil.java
+│   │               ├── HSMUtil.java
+│   │               └── SecurityUtil.java
+│   └── resources/
+│       ├── application.properties
+│       └── templates/
+└── test/
+    └── java/
+        └── com/
+            └── docsign/
+                ├── service/
+                │   ├── SigningServiceTest.java
+                │   ├── CertificateServiceTest.java
+                │   └── AuditServiceTest.java
+                └── util/
+                    └── SignatureUtilTest.java
 ```
 
-**Edit a file directly in GitHub**
+### API Endpoints
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+The backend exposes the following REST endpoints:
 
-**Use GitHub Codespaces**
+- **POST /api/sign**: Sign a document
+- **GET /api/certificates**: List available certificates
+- **POST /api/certificates**: Upload a new certificate
+- **GET /api/audit**: Get audit logs
+- **POST /api/hsm/connect**: Connect to an HSM
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Signing Process
 
-## What technologies are used for this project?
+1. Client uploads a PDF document
+2. Client specifies signature positions (page, coordinates)
+3. Backend validates the document
+4. Backend signs the document using the selected certificate
+5. Backend generates audit log entry
+6. Signed document is returned to the client
 
-This project is built with .
+### Security Considerations
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- All private keys in PKCS #12 files are encrypted
+- HSM integration keeps private keys secure in hardware
+- All API endpoints require authentication
+- Certificates are validated before use
+- Password policies enforce strong credentials
+- Audit logging captures all security-relevant events
 
-## How can I deploy this project?
+### PDF Signing Implementation
 
-Simply open [Lovable](https://lovable.dev/projects/43afdf89-d72e-4974-abea-8cc9fb1be93e) and click on Share -> Publish.
+The core signing functionality uses iText or PDFBox libraries:
 
-## I want to use a custom domain - is that possible?
+```java
+public class SigningService {
+    public byte[] signPdf(byte[] pdfBytes, SignatureRequest request, Certificate cert) {
+        // Initialize document
+        PdfReader reader = new PdfReader(new ByteArrayInputStream(pdfBytes));
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        PdfSigner signer = new PdfSigner(reader, outputStream, new StampingProperties());
+        
+        // Set signature parameters
+        signer.setFieldName("Signature" + System.currentTimeMillis());
+        
+        // Create signature appearance
+        Rectangle rect = new Rectangle(
+            request.getX(), 
+            request.getY(), 
+            request.getX() + request.getWidth(), 
+            request.getY() + request.getHeight()
+        );
+        PdfSignatureAppearance appearance = signer.getSignatureAppearance();
+        appearance.setReason(request.getReason());
+        appearance.setLocation(request.getLocation());
+        appearance.setReuseAppearance(false);
+        appearance.setPageRect(rect).setPageNumber(request.getPage());
+        
+        // Create signature
+        IExternalSignature signature = createSignature(cert);
+        
+        // Sign the document
+        signer.signDetached(signature, digestAlgorithm, provider, chain, null, null, null, 0, PdfSigner.CryptoStandard.CMS);
+        
+        return outputStream.toByteArray();
+    }
+    
+    private IExternalSignature createSignature(Certificate cert) {
+        if (cert.getType() == CertificateType.PKCS12) {
+            // Use PKCS #12 certificate
+            KeyStore keyStore = KeyStore.getInstance("PKCS12");
+            keyStore.load(new FileInputStream(cert.getFilePath()), cert.getPassword().toCharArray());
+            String alias = keyStore.aliases().nextElement();
+            PrivateKey pk = (PrivateKey) keyStore.getKey(alias, cert.getPassword().toCharArray());
+            return new PrivateKeySignature(pk, digestAlgorithm, provider);
+        } else {
+            // Use HSM
+            return new HSMSignature(cert.getHsmConfig());
+        }
+    }
+}
+```
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+### Testing
+
+The application includes comprehensive unit and integration tests. To run the tests:
+
+```
+mvn test
+```
+
+### Troubleshooting
+
+Common issues and solutions:
+
+1. **Certificate loading failures**:
+   - Ensure the PKCS #12 file is valid
+   - Verify the password is correct
+   - Check file permissions
+
+2. **HSM connection issues**:
+   - Verify HSM device is properly connected
+   - Check network connectivity to HSM
+   - Ensure slot ID and PIN are correct
+
+3. **PDF signing errors**:
+   - Check PDF is not corrupted
+   - Ensure signature coordinates are within page bounds
+   - Verify certificate is valid and not expired
+
+## License
+
+This project is licensed under the MIT License.
