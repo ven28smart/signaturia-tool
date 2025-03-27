@@ -16,7 +16,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 220 25% 20%;
 
-    --primary: 262 85% 74%; /* Leegality purple */
+    --primary: 262 85% 74%; /* Original purple */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 262 25% 96%;
@@ -35,7 +35,7 @@
     --input: 220 13% 91%;
     --ring: 262 85% 74%;
 
-    --radius: 0.5rem; /* Adjusted to match Leegality's design system */
+    --radius: 0.5rem;
   }
 
   .dark {
