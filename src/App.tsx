@@ -16,6 +16,9 @@ import UserManagement from "./pages/UserManagement";
 
 const queryClient = new QueryClient();
 
+// Add information to README.md to explain the containerization and deployment
+// This will be shown below in the documentation
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <UserProvider>
