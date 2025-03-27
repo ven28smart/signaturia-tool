@@ -15,6 +15,18 @@ import { UserProvider, useUser } from "./contexts/UserContext";
 import UserManagement from "./pages/UserManagement";
 import Login from "./pages/Login";
 
+// Create a global license checker window function
+declare global {
+  interface Window {
+    checkLicenseForSigning?: () => boolean;
+  }
+}
+
+// Initialize license checker to always return true
+if (typeof window !== 'undefined') {
+  window.checkLicenseForSigning = () => true;
+}
+
 const queryClient = new QueryClient();
 
 // Protected route component

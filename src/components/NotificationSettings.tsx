@@ -5,9 +5,10 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Bell, Save } from "lucide-react";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/contexts/UserContext";
 import PermissionGuard from "@/components/PermissionGuard";
+import NotificationDisplay from "@/components/NotificationDisplay";
 
 interface NotificationPreferences {
   signatureSuccess: boolean;
@@ -19,6 +20,7 @@ interface NotificationPreferences {
 }
 
 const NotificationSettings = () => {
+  const { toast } = useToast();
   const [preferences, setPreferences] = useState<NotificationPreferences>(() => {
     const savedPrefs = localStorage.getItem('notification_preferences');
     return savedPrefs ? JSON.parse(savedPrefs) : {
@@ -49,112 +51,121 @@ const NotificationSettings = () => {
     
     setTimeout(() => {
       setIsSaving(false);
-      toast.success('Notification preferences saved successfully');
+      toast({
+        title: "Success",
+        description: "Notification preferences saved successfully"
+      });
     }, 1000);
   };
   
   return (
     <PermissionGuard permission="settings.edit">
-      <Card className="mb-6">
-        <CardHeader className="pb-3">
-          <div className="flex items-center gap-2">
-            <Bell className="h-5 w-5 text-primary" />
-            <CardTitle>Notification Preferences</CardTitle>
-          </div>
-          <CardDescription>
-            Configure which events should trigger email notifications
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-base">Signature Success</Label>
-                <p className="text-sm text-muted-foreground">Notify when a document is successfully signed</p>
+      <div className="grid md:grid-cols-2 gap-6">
+        <Card className="mb-6">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <Bell className="h-5 w-5 text-primary" />
+              <CardTitle>Notification Preferences</CardTitle>
+            </div>
+            <CardDescription>
+              Configure which events should trigger email notifications
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-base">Signature Success</Label>
+                  <p className="text-sm text-muted-foreground">Notify when a document is successfully signed</p>
+                </div>
+                <Switch 
+                  checked={preferences.signatureSuccess}
+                  onCheckedChange={() => handleToggle('signatureSuccess')}
+                />
               </div>
-              <Switch 
-                checked={preferences.signatureSuccess}
-                onCheckedChange={() => handleToggle('signatureSuccess')}
-              />
+              
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-base">Signature Failure</Label>
+                  <p className="text-sm text-muted-foreground">Notify when document signing fails</p>
+                </div>
+                <Switch 
+                  checked={preferences.signatureFailure}
+                  onCheckedChange={() => handleToggle('signatureFailure')}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-base">Certificate Expiry</Label>
+                  <p className="text-sm text-muted-foreground">Notify when certificates are about to expire</p>
+                </div>
+                <Switch 
+                  checked={preferences.certificateExpiry}
+                  onCheckedChange={() => handleToggle('certificateExpiry')}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-base">License Expiry</Label>
+                  <p className="text-sm text-muted-foreground">Notify when license is about to expire</p>
+                </div>
+                <Switch 
+                  checked={preferences.licenseExpiry}
+                  onCheckedChange={() => handleToggle('licenseExpiry')}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-base">Unauthorized Access</Label>
+                  <p className="text-sm text-muted-foreground">Notify about unauthorized access attempts</p>
+                </div>
+                <Switch 
+                  checked={preferences.unauthorizedAccess}
+                  onCheckedChange={() => handleToggle('unauthorizedAccess')}
+                />
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-base">System Errors</Label>
+                  <p className="text-sm text-muted-foreground">Notify about critical system errors</p>
+                </div>
+                <Switch 
+                  checked={preferences.systemErrors}
+                  onCheckedChange={() => handleToggle('systemErrors')}
+                />
+              </div>
             </div>
             
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-base">Signature Failure</Label>
-                <p className="text-sm text-muted-foreground">Notify when document signing fails</p>
-              </div>
-              <Switch 
-                checked={preferences.signatureFailure}
-                onCheckedChange={() => handleToggle('signatureFailure')}
-              />
+            <div className="flex justify-end mt-6">
+              <Button 
+                type="button" 
+                onClick={handleSave}
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <>
+                    <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save Preferences
+                  </>
+                )}
+              </Button>
             </div>
-            
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-base">Certificate Expiry</Label>
-                <p className="text-sm text-muted-foreground">Notify when certificates are about to expire</p>
-              </div>
-              <Switch 
-                checked={preferences.certificateExpiry}
-                onCheckedChange={() => handleToggle('certificateExpiry')}
-              />
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-base">License Expiry</Label>
-                <p className="text-sm text-muted-foreground">Notify when license is about to expire</p>
-              </div>
-              <Switch 
-                checked={preferences.licenseExpiry}
-                onCheckedChange={() => handleToggle('licenseExpiry')}
-              />
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-base">Unauthorized Access</Label>
-                <p className="text-sm text-muted-foreground">Notify about unauthorized access attempts</p>
-              </div>
-              <Switch 
-                checked={preferences.unauthorizedAccess}
-                onCheckedChange={() => handleToggle('unauthorizedAccess')}
-              />
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-base">System Errors</Label>
-                <p className="text-sm text-muted-foreground">Notify about critical system errors</p>
-              </div>
-              <Switch 
-                checked={preferences.systemErrors}
-                onCheckedChange={() => handleToggle('systemErrors')}
-              />
-            </div>
-          </div>
-          
-          <div className="flex justify-end mt-6">
-            <Button 
-              type="button" 
-              onClick={handleSave}
-              disabled={isSaving}
-            >
-              {isSaving ? (
-                <>
-                  <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4 mr-2" />
-                  Save Preferences
-                </>
-              )}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+        
+        <div>
+          <NotificationDisplay />
+        </div>
+      </div>
     </PermissionGuard>
   );
 };
