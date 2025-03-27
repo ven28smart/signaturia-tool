@@ -18,6 +18,7 @@ import { User, UserRole, defaultPermissions, rolePermissions } from '@/types/use
 import PermissionGuard from '@/components/PermissionGuard';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 const UserManagement = () => {
   const { users, addUser, updateUser, deleteUser, hasPermission, currentUser } = useUser();
@@ -563,8 +564,7 @@ const UserManagement = () => {
               </div>
               <div className="space-y-3">
                 <h3 className="font-semibold flex items-center">
-                  <Badge className={getRoleColor('manager')} className="mr-2">Manager</Badge>
-                  Manager
+                  <Badge className={getRoleColor('manager')}>Manager</Badge>
                 </h3>
                 <ul className="space-y-1 ml-5 list-disc text-sm">
                   {rolePermissions['manager'].map(permission => (
@@ -576,8 +576,7 @@ const UserManagement = () => {
               </div>
               <div className="space-y-3">
                 <h3 className="font-semibold flex items-center">
-                  <Badge className={getRoleColor('user')} className="mr-2">User</Badge>
-                  Regular User
+                  <Badge className={getRoleColor('user')}>User</Badge>
                 </h3>
                 <ul className="space-y-1 ml-5 list-disc text-sm">
                   {rolePermissions['user'].map(permission => (
@@ -589,8 +588,7 @@ const UserManagement = () => {
               </div>
               <div className="space-y-3">
                 <h3 className="font-semibold flex items-center">
-                  <Badge className={getRoleColor('viewer')} className="mr-2">Viewer</Badge>
-                  Viewer
+                  <Badge className={getRoleColor('viewer')}>Viewer</Badge>
                 </h3>
                 <ul className="space-y-1 ml-5 list-disc text-sm">
                   {rolePermissions['viewer'].map(permission => (
@@ -612,3 +610,4 @@ const UserManagement = () => {
 };
 
 export default UserManagement;
+
