@@ -1,3 +1,4 @@
+
 // Import necessary modules and components
 import React, { useState, useEffect } from 'react';
 import { useUser } from '@/contexts/UserContext';
@@ -60,6 +61,11 @@ const UserManagement: React.FC = () => {
     } else {
       setPermissions([...permissions, permission]);
     }
+  };
+
+  // Handle role change with proper type handling
+  const handleRoleChange = (value: string) => {
+    setRole(value as UserRole);
   };
 
   // Handle create user
@@ -208,7 +214,7 @@ const UserManagement: React.FC = () => {
                 <Label htmlFor="role" className="text-right">
                   Role
                 </Label>
-                <Select onValueChange={setRole} defaultValue={role}>
+                <Select onValueChange={handleRoleChange} defaultValue={role}>
                   <SelectTrigger className="col-span-3">
                     <SelectValue placeholder="Select a role" />
                   </SelectTrigger>
@@ -328,7 +334,7 @@ const UserManagement: React.FC = () => {
               <Label htmlFor="role" className="text-right">
                 Role
               </Label>
-              <Select onValueChange={setRole} value={role}>
+              <Select onValueChange={handleRoleChange} value={role}>
                 <SelectTrigger className="col-span-3">
                   <SelectValue placeholder="Select a role" />
                 </SelectTrigger>
