@@ -105,8 +105,26 @@ export const validateLicenseKey = (licenseKey: string): {
     
     // Parse the components
     const [organizationId, expiryTimestamp, totalDocumentsStr] = decodedString.split(":");
-    const expiryDate = new Date(parseInt(expiryTimestamp));
+    
+    // Validate that we have all required parts and they're valid
+    if (!organizationId || !expiryTimestamp || !totalDocumentsStr) {
+      return { isValid: false };
+    }
+    
+    const expiryTimestampNum = parseInt(expiryTimestamp);
+    if (isNaN(expiryTimestampNum)) {
+      return { isValid: false };
+    }
+    
+    const expiryDate = new Date(expiryTimestampNum);
+    if (expiryDate.toString() === "Invalid Date") {
+      return { isValid: false };
+    }
+    
     const totalDocuments = parseInt(totalDocumentsStr);
+    if (isNaN(totalDocuments)) {
+      return { isValid: false };
+    }
     
     // Validate expiry date
     const now = new Date();
@@ -121,6 +139,7 @@ export const validateLicenseKey = (licenseKey: string): {
       totalDocuments
     };
   } catch (error) {
+    console.error('Error validating license key:', error);
     return { isValid: false };
   }
 };

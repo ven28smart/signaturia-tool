@@ -40,26 +40,37 @@ const LicenseManager: React.FC = () => {
   // For this standalone version, we're implementing client-side validation
   // which isn't truly secure but demonstrates the concept
   const handleActivateLicense = (licenseKey: string) => {
-    const validationResult = validateLicenseKey(licenseKey);
-    
-    if (!validationResult.isValid) {
-      toast.error('Invalid license key. Please check and try again.');
-      return;
+    try {
+      const validationResult = validateLicenseKey(licenseKey);
+      
+      if (!validationResult.isValid) {
+        toast.error('Invalid license key. Please check and try again.');
+        return;
+      }
+      
+      // Ensure we have a valid expiry date
+      if (!validationResult.expiryDate) {
+        toast.error('License key has an invalid expiry date.');
+        return;
+      }
+      
+      // Create new license object
+      const newLicense: OrganizationLicense = {
+        licenseKey: licenseKey,
+        issuedDate: new Date().toISOString(),
+        expiryDate: validationResult.expiryDate.toISOString(),
+        totalDocuments: validationResult.totalDocuments || 0,
+        usedDocuments: 0,
+        isActive: true,
+        features: ['Digital Signatures', 'Certificate Management', 'Audit Logs']
+      };
+      
+      setLicense(newLicense);
+      toast.success('License activated successfully');
+    } catch (error) {
+      console.error('Error activating license:', error);
+      toast.error('Failed to activate license. Please try again.');
     }
-    
-    // Create new license object
-    const newLicense: OrganizationLicense = {
-      licenseKey: licenseKey,
-      issuedDate: new Date().toISOString(),
-      expiryDate: validationResult.expiryDate!.toISOString(),
-      totalDocuments: validationResult.totalDocuments || 0,
-      usedDocuments: 0,
-      isActive: true,
-      features: ['Digital Signatures', 'Certificate Management', 'Audit Logs']
-    };
-    
-    setLicense(newLicense);
-    toast.success('License activated successfully');
   };
 
   // Function to increment document count when signing
