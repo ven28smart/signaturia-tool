@@ -11,9 +11,18 @@ interface UserContextType {
   updateUser: (user: User) => void;
   deleteUser: (userId: string) => void;
   hasPermission: (permission: string) => boolean;
+  loginUser: (email: string, password: string) => Promise<boolean>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
+
+// Default passwords (in a real app, these would be hashed)
+const userPasswords: Record<string, string> = {
+  'admin@example.com': 'admin123',
+  'manager@example.com': 'password123',
+  'user@example.com': 'password123',
+  'viewer@example.com': 'password123',
+};
 
 // Mock admin user for development
 const adminUser: User = {
@@ -62,8 +71,21 @@ const sampleUsers: User[] = [
 ];
 
 export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(adminUser);
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    // Check if user is stored in localStorage
+    const storedUser = localStorage.getItem('current_user');
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
   const [users, setUsers] = useState<User[]>(sampleUsers);
+
+  // Save current user to localStorage whenever it changes
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem('current_user', JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem('current_user');
+    }
+  }, [currentUser]);
 
   const addUser = (user: User) => {
     setUsers([...users, user]);
@@ -85,6 +107,30 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return currentUser.permissions.includes(permission);
   };
 
+  const loginUser = async (email: string, password: string): Promise<boolean> => {
+    // In a real app, this would verify against the backend
+    // For now, we'll check against our local records
+    const user = users.find(u => u.email === email);
+    
+    if (!user) {
+      return false;
+    }
+    
+    if (userPasswords[email] !== password) {
+      return false;
+    }
+    
+    // Update last login time
+    const updatedUser = {
+      ...user,
+      lastLogin: new Date().toISOString()
+    };
+    
+    updateUser(updatedUser);
+    setCurrentUser(updatedUser);
+    return true;
+  };
+
   return (
     <UserContext.Provider
       value={{
@@ -96,6 +142,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         updateUser,
         deleteUser,
         hasPermission,
+        loginUser,
       }}
     >
       {children}

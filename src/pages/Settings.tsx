@@ -20,6 +20,8 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
 import LicenseManager from '@/components/LicenseManager';
 import { generateLicenseKey } from '@/types/user';
+import SMTPSettings from '@/components/SMTPSettings';
+import NotificationSettings from '@/components/NotificationSettings';
 
 const Settings = () => {
   const [pdfLibrary, setPdfLibrary] = useState('itext');
@@ -85,6 +87,7 @@ const Settings = () => {
                     <TabsTrigger value="general" className="flex-1">General</TabsTrigger>
                     <TabsTrigger value="security" className="flex-1">Security</TabsTrigger>
                     <TabsTrigger value="audit" className="flex-1">Audit</TabsTrigger>
+                    <TabsTrigger value="notifications" className="flex-1">Notifications</TabsTrigger>
                     <TabsTrigger value="license" className="flex-1">License</TabsTrigger>
                   </TabsList>
                   
@@ -221,6 +224,13 @@ const Settings = () => {
                       </div>
                     </TabsContent>
                     
+                    <TabsContent value="notifications">
+                      <div className="space-y-6">
+                        <SMTPSettings />
+                        <NotificationSettings />
+                      </div>
+                    </TabsContent>
+                    
                     <TabsContent value="license" className="space-y-6">
                       <div className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-900/50 space-y-4">
                         <div className="flex items-center gap-2 mb-2">
@@ -319,7 +329,7 @@ const Settings = () => {
                 <div className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-300">
                   <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
                   <p>
-                    These settings control how the application handles documents, certificates, and audit logging. 
+                    These settings control how the application handles documents, certificates, emails, and audit logging. 
                     Changes take effect immediately after saving.
                   </p>
                 </div>

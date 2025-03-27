@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./components/Layout";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -11,13 +11,22 @@ import SignDocument from "./pages/SignDocument";
 import CertificateManager from "./pages/CertificateManager";
 import AuditLogs from "./pages/AuditLogs";
 import Settings from "./pages/Settings";
-import { UserProvider } from "./contexts/UserContext";
+import { UserProvider, useUser } from "./contexts/UserContext";
 import UserManagement from "./pages/UserManagement";
+import Login from "./pages/Login";
 
 const queryClient = new QueryClient();
 
-// Add information to README.md to explain the containerization and deployment
-// This will be shown below in the documentation
+// Protected route component
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { currentUser } = useUser();
+  
+  if (!currentUser) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  return <>{children}</>;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -27,7 +36,13 @@ const App = () => (
           <Toaster />
           <Sonner />
           <Routes>
-            <Route element={<Layout />}>
+            <Route path="/login" element={<Login />} />
+            
+            <Route element={
+              <ProtectedRoute>
+                <Layout />
+              </ProtectedRoute>
+            }>
               <Route path="/" element={<Index />} />
               <Route path="/sign" element={<SignDocument />} />
               <Route path="/certificates" element={<CertificateManager />} />
