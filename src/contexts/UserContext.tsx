@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserRole, rolePermissions } from '@/types/user';
 
@@ -72,20 +73,36 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [users, setUsers] = useState<User[]>(initialUsers);
   
   useEffect(() => {
+    // Load saved user on startup
     const savedUser = localStorage.getItem('currentUser');
     if (savedUser) {
-      setCurrentUser(JSON.parse(savedUser));
+      try {
+        setCurrentUser(JSON.parse(savedUser));
+        console.log("Loaded user from localStorage", JSON.parse(savedUser));
+      } catch (e) {
+        console.error("Failed to parse saved user", e);
+        localStorage.removeItem('currentUser');
+      }
     }
     
+    // Load saved users list
     const savedUsers = localStorage.getItem('users');
     if (savedUsers) {
-      setUsers(JSON.parse(savedUsers));
+      try {
+        setUsers(JSON.parse(savedUsers));
+      } catch (e) {
+        console.error("Failed to parse saved users", e);
+        localStorage.setItem('users', JSON.stringify(initialUsers));
+      }
     } else {
       localStorage.setItem('users', JSON.stringify(initialUsers));
     }
   }, []);
   
   const loginUser = async (username: string, password: string): Promise<boolean> => {
+    console.log("Attempting login for:", username);
+    
+    // Admin login
     if (username === 'admin' && password === 'admin') {
       const adminUser = users.find(u => u.username === 'admin');
       if (adminUser) {
@@ -93,15 +110,19 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           ...adminUser,
           lastLogin: new Date().toISOString()
         };
+        
+        console.log("Admin login successful, setting current user", updatedUser);
         setCurrentUser(updatedUser);
         localStorage.setItem('currentUser', JSON.stringify(updatedUser));
         
+        // Update the user in the users list
         updateUser(updatedUser);
         
         return true;
       }
     }
     
+    // Regular user login
     const user = users.find(u => u.username === username);
     
     if (user && password === 'password') {
@@ -109,18 +130,23 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ...user,
         lastLogin: new Date().toISOString()
       };
+      
+      console.log("User login successful, setting current user", updatedUser);
       setCurrentUser(updatedUser);
       localStorage.setItem('currentUser', JSON.stringify(updatedUser));
       
+      // Update the user in the users list
       updateUser(updatedUser);
       
       return true;
     }
     
+    console.log("Login failed for:", username);
     return false;
   };
   
   const logoutUser = () => {
+    console.log("Logging out user");
     setCurrentUser(null);
     localStorage.removeItem('currentUser');
   };

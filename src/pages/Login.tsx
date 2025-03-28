@@ -18,6 +18,7 @@ const Login = () => {
   
   // Redirect if already logged in
   if (currentUser) {
+    console.log("User already logged in, redirecting to home");
     return <Navigate to="/" />;
   }
   
@@ -33,10 +34,17 @@ const Login = () => {
     
     try {
       // Use the default credentials of admin/admin if they match
-      if ((username === 'admin' && password === 'admin') || 
-          await loginUser(username, password)) {
+      const success = (username === 'admin' && password === 'admin') || 
+                      await loginUser(username, password);
+                      
+      if (success) {
         toast.success('Logged in successfully');
-        navigate('/');
+        console.log("Login successful, navigating to home page");
+        
+        // Force a small delay to ensure the auth state is updated
+        setTimeout(() => {
+          navigate('/');
+        }, 100);
       } else {
         toast.error('Invalid username or password');
       }
