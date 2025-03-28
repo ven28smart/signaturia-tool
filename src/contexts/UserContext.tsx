@@ -1,159 +1,196 @@
-
-import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserRole, rolePermissions } from '@/types/user';
 
 interface UserContextType {
   currentUser: User | null;
   users: User[];
-  setCurrentUser: (user: User | null) => void;
-  setUsers: (users: User[]) => void;
+  loginUser: (username: string, password: string) => Promise<boolean>;
+  logoutUser: () => void;
   addUser: (user: User) => void;
   updateUser: (user: User) => void;
+  updateCurrentUser: (user: User) => void;
   deleteUser: (userId: string) => void;
   hasPermission: (permission: string) => boolean;
-  loginUser: (email: string, password: string) => Promise<boolean>;
+  resetUserPassword: (userId: string) => Promise<boolean>;
+  generatePasswordResetLink: (userId: string) => Promise<boolean>;
 }
 
-const UserContext = createContext<UserContextType | undefined>(undefined);
+const UserContext = createContext<UserContextType>({
+  currentUser: null,
+  users: [],
+  loginUser: async () => false,
+  logoutUser: () => {},
+  addUser: () => {},
+  updateUser: () => {},
+  updateCurrentUser: () => {},
+  deleteUser: () => {},
+  hasPermission: () => false,
+  resetUserPassword: async () => false,
+  generatePasswordResetLink: async () => false,
+});
 
-// Default passwords (in a real app, these would be hashed)
-const userPasswords: Record<string, string> = {
-  'admin@example.com': 'admin123',
-  'manager@example.com': 'password123',
-  'user@example.com': 'password123',
-  'viewer@example.com': 'password123',
-};
+export const useUser = () => useContext(UserContext);
 
-// Mock admin user for development
-const adminUser: User = {
-  id: '1',
-  email: 'admin@example.com',
-  name: 'Admin User',
-  role: 'admin',
-  permissions: rolePermissions['admin'],
-  createdAt: new Date().toISOString(),
-  lastLogin: new Date().toISOString(),
-  status: 'active',
-};
-
-// Sample users for development
-const sampleUsers: User[] = [
-  adminUser,
-  {
-    id: '2',
-    email: 'manager@example.com',
-    name: 'Manager User',
-    role: 'manager',
-    permissions: rolePermissions['manager'],
-    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-    lastLogin: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-    status: 'active',
-  },
-  {
-    id: '3',
-    email: 'user@example.com',
-    name: 'Regular User',
-    role: 'user',
-    permissions: rolePermissions['user'],
-    createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-    lastLogin: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-    status: 'active',
-  },
-  {
-    id: '4',
-    email: 'viewer@example.com',
-    name: 'Viewer User',
-    role: 'viewer',
-    permissions: rolePermissions['viewer'],
-    createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-    status: 'active',
-  },
-];
-
-export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(() => {
-    // Check if user is stored in localStorage
-    const storedUser = localStorage.getItem('current_user');
-    return storedUser ? JSON.parse(storedUser) : null;
-  });
-  const [users, setUsers] = useState<User[]>(sampleUsers);
-
-  // Save current user to localStorage whenever it changes
+export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const initialUsers: User[] = [
+    {
+      id: '1',
+      name: 'Administrator',
+      username: 'admin',
+      email: 'admin@example.com',
+      role: 'admin',
+      permissions: rolePermissions.admin,
+      createdAt: new Date().toISOString(),
+      lastLogin: new Date().toISOString(),
+      status: 'active',
+    },
+    {
+      id: '2',
+      name: 'Manager User',
+      username: 'manager',
+      email: 'manager@example.com',
+      role: 'manager',
+      permissions: rolePermissions.manager,
+      createdAt: new Date().toISOString(),
+      lastLogin: new Date().toISOString(),
+      status: 'active',
+    },
+    {
+      id: '3',
+      name: 'Regular User',
+      username: 'user',
+      email: 'user@example.com',
+      role: 'user',
+      permissions: rolePermissions.user,
+      createdAt: new Date().toISOString(),
+      lastLogin: new Date().toISOString(),
+      status: 'active',
+    }
+  ];
+  
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [users, setUsers] = useState<User[]>(initialUsers);
+  
   useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem('current_user', JSON.stringify(currentUser));
+    const savedUser = localStorage.getItem('currentUser');
+    if (savedUser) {
+      setCurrentUser(JSON.parse(savedUser));
+    }
+    
+    const savedUsers = localStorage.getItem('users');
+    if (savedUsers) {
+      setUsers(JSON.parse(savedUsers));
     } else {
-      localStorage.removeItem('current_user');
+      localStorage.setItem('users', JSON.stringify(initialUsers));
     }
-  }, [currentUser]);
-
-  const addUser = (user: User) => {
-    setUsers([...users, user]);
-  };
-
-  const updateUser = (updatedUser: User) => {
-    setUsers(users.map(user => user.id === updatedUser.id ? updatedUser : user));
-    if (currentUser?.id === updatedUser.id) {
+  }, []);
+  
+  const loginUser = async (username: string, password: string): Promise<boolean> => {
+    if (username === 'admin' && password === 'admin') {
+      const adminUser = users.find(u => u.username === 'admin');
+      if (adminUser) {
+        const updatedUser = {
+          ...adminUser,
+          lastLogin: new Date().toISOString()
+        };
+        setCurrentUser(updatedUser);
+        localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+        
+        updateUser(updatedUser);
+        
+        return true;
+      }
+    }
+    
+    const user = users.find(u => u.username === username);
+    
+    if (user && password === 'password') {
+      const updatedUser = {
+        ...user,
+        lastLogin: new Date().toISOString()
+      };
       setCurrentUser(updatedUser);
+      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+      
+      updateUser(updatedUser);
+      
+      return true;
+    }
+    
+    return false;
+  };
+  
+  const logoutUser = () => {
+    setCurrentUser(null);
+    localStorage.removeItem('currentUser');
+  };
+  
+  const addUser = (user: User) => {
+    const newUsers = [...users, user];
+    setUsers(newUsers);
+    localStorage.setItem('users', JSON.stringify(newUsers));
+  };
+  
+  const updateUser = (updatedUser: User) => {
+    const newUsers = users.map(user => 
+      user.id === updatedUser.id ? updatedUser : user
+    );
+    setUsers(newUsers);
+    localStorage.setItem('users', JSON.stringify(newUsers));
+    
+    if (currentUser && currentUser.id === updatedUser.id) {
+      setCurrentUser(updatedUser);
+      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
     }
   };
-
-  const deleteUser = (userId: string) => {
-    setUsers(users.filter(user => user.id !== userId));
+  
+  const updateCurrentUser = (updatedUser: User) => {
+    setCurrentUser(updatedUser);
+    localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+    
+    updateUser(updatedUser);
   };
-
+  
+  const deleteUser = (userId: string) => {
+    const newUsers = users.filter(user => user.id !== userId);
+    setUsers(newUsers);
+    localStorage.setItem('users', JSON.stringify(newUsers));
+  };
+  
   const hasPermission = (permission: string): boolean => {
     if (!currentUser) return false;
     return currentUser.permissions.includes(permission);
   };
-
-  const loginUser = async (email: string, password: string): Promise<boolean> => {
-    // In a real app, this would verify against the backend
-    // For now, we'll check against our local records
-    const user = users.find(u => u.email === email);
-    
-    if (!user) {
-      return false;
-    }
-    
-    if (userPasswords[email] !== password) {
-      return false;
-    }
-    
-    // Update last login time
-    const updatedUser = {
-      ...user,
-      lastLogin: new Date().toISOString()
-    };
-    
-    updateUser(updatedUser);
-    setCurrentUser(updatedUser);
-    return true;
+  
+  const resetUserPassword = async (userId: string): Promise<boolean> => {
+    return new Promise(resolve => {
+      setTimeout(() => resolve(true), 1000);
+    });
   };
-
+  
+  const generatePasswordResetLink = async (userId: string): Promise<boolean> => {
+    return new Promise(resolve => {
+      setTimeout(() => resolve(true), 1000);
+    });
+  };
+  
   return (
     <UserContext.Provider
       value={{
         currentUser,
         users,
-        setCurrentUser,
-        setUsers,
+        loginUser,
+        logoutUser,
         addUser,
         updateUser,
+        updateCurrentUser,
         deleteUser,
         hasPermission,
-        loginUser,
+        resetUserPassword,
+        generatePasswordResetLink
       }}
     >
       {children}
     </UserContext.Provider>
   );
-};
-
-export const useUser = () => {
-  const context = useContext(UserContext);
-  if (context === undefined) {
-    throw new Error('useUser must be used within a UserProvider');
-  }
-  return context;
 };

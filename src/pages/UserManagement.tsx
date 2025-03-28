@@ -1,5 +1,4 @@
 
-// Import necessary modules and components
 import React, { useState, useEffect } from 'react';
 import { useUser } from '@/contexts/UserContext';
 import { User, UserRole } from '@/types/user';
@@ -25,24 +24,26 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Edit, Trash2, User as UserIcon, Plus, AlertTriangle } from 'lucide-react';
+import { Edit, Trash2, User as UserIcon, Plus, AlertTriangle, Key, Mail } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog"
 import { toast } from 'sonner';
 import { Checkbox } from "@/components/ui/checkbox"
-// Import the cn utility function at the top
 import { cn } from "@/lib/utils";
 
 // User Management Component
 const UserManagement: React.FC = () => {
-  const { users, addUser, updateUser, deleteUser } = useUser();
+  const { users, addUser, updateUser, deleteUser, resetUserPassword, generatePasswordResetLink } = useUser();
   const [openCreateDialog, setOpenCreateDialog] = useState(false);
   const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [openResetDialog, setOpenResetDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<UserRole>('user');
   const [permissions, setPermissions] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
   // Permission options
   const permissionOptions = [
@@ -73,24 +74,38 @@ const UserManagement: React.FC = () => {
     setIsSaving(true);
     
     // Basic validation
-    if (!name || !email || !role) {
-      toast.error('Please fill in all fields.');
+    if (!name || !username || !role) {
+      toast.error('Name and username are required.');
       setIsSaving(false);
       return;
     }
     
-    // Email format validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    // Username format validation
+    if (username.length < 3) {
+      toast.error('Username must be at least 3 characters.');
+      setIsSaving(false);
+      return;
+    }
+    
+    // Check if username already exists
+    if (users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
+      toast.error('Username already exists. Please choose a different one.');
+      setIsSaving(false);
+      return;
+    }
+    
+    // Optional email validation
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       toast.error('Please enter a valid email address.');
       setIsSaving(false);
       return;
     }
 
     const newUser: User = {
-      id: String(Date.now()), // Generate a unique ID
+      id: String(Date.now()),
       name,
-      email,
+      username,
+      email: email || undefined,
       role,
       permissions,
       createdAt: new Date().toISOString(),
@@ -109,14 +124,30 @@ const UserManagement: React.FC = () => {
   const handleEditUser = async () => {
     setIsSaving(true);
     
-    if (!name || !email || !role) {
-      toast.error('Please fill in all fields.');
+    if (!name || !username || !role) {
+      toast.error('Name and username are required.');
       setIsSaving(false);
       return;
     }
     
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    // Username format validation
+    if (username.length < 3) {
+      toast.error('Username must be at least 3 characters.');
+      setIsSaving(false);
+      return;
+    }
+    
+    // Check if username already exists (excluding current user)
+    if (selectedUser && 
+        username !== selectedUser.username && 
+        users.some(u => u.username.toLowerCase() === username.toLowerCase())) {
+      toast.error('Username already exists. Please choose a different one.');
+      setIsSaving(false);
+      return;
+    }
+    
+    // Optional email validation
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       toast.error('Please enter a valid email address.');
       setIsSaving(false);
       return;
@@ -127,7 +158,8 @@ const UserManagement: React.FC = () => {
     const updatedUser: User = {
       ...selectedUser,
       name,
-      email,
+      username,
+      email: email || undefined,
       role,
       permissions,
     };
@@ -137,6 +169,57 @@ const UserManagement: React.FC = () => {
     resetForm();
     toast.success('User updated successfully.');
     setIsSaving(false);
+  };
+
+  // Handle reset password
+  const handleResetPassword = async () => {
+    if (!selectedUser) return;
+    
+    setIsResetting(true);
+    
+    try {
+      const success = await resetUserPassword(selectedUser.id);
+      
+      if (success) {
+        toast.success('Password has been reset successfully');
+        setOpenResetDialog(false);
+      } else {
+        toast.error('Failed to reset password');
+      }
+    } catch (error) {
+      toast.error('An error occurred while resetting the password');
+      console.error(error);
+    } finally {
+      setIsResetting(false);
+    }
+  };
+  
+  // Handle send password reset link
+  const handleSendResetLink = async () => {
+    if (!selectedUser) return;
+    
+    if (!selectedUser.email) {
+      toast.error('User does not have an email address');
+      return;
+    }
+    
+    setIsResetting(true);
+    
+    try {
+      const success = await generatePasswordResetLink(selectedUser.id);
+      
+      if (success) {
+        toast.success('Password reset link has been sent to the user\'s email');
+        setOpenResetDialog(false);
+      } else {
+        toast.error('Failed to send password reset link');
+      }
+    } catch (error) {
+      toast.error('An error occurred while sending the password reset link');
+      console.error(error);
+    } finally {
+      setIsResetting(false);
+    }
   };
 
   // Handle delete user
@@ -150,17 +233,25 @@ const UserManagement: React.FC = () => {
   // Reset form
   const resetForm = () => {
     setName('');
+    setUsername('');
     setEmail('');
     setRole('user');
     setPermissions([]);
     setSelectedUser(null);
   };
 
+  // Open reset password dialog
+  const openPasswordReset = (user: User) => {
+    setSelectedUser(user);
+    setOpenResetDialog(true);
+  };
+
   // Edit user
   const editUser = (user: User) => {
     setSelectedUser(user);
     setName(user.name);
-    setEmail(user.email);
+    setUsername(user.username);
+    setEmail(user.email || '');
     setRole(user.role);
     setPermissions(user.permissions);
     setOpenEditDialog(true);
@@ -170,7 +261,8 @@ const UserManagement: React.FC = () => {
   useEffect(() => {
     if (selectedUser) {
       setName(selectedUser.name);
-      setEmail(selectedUser.email);
+      setUsername(selectedUser.username);
+      setEmail(selectedUser.email || '');
       setRole(selectedUser.role);
       setPermissions(selectedUser.permissions);
     }
@@ -205,8 +297,14 @@ const UserManagement: React.FC = () => {
                 <Input id="name" value={name} onChange={(e) => setName(e.target.value)} className="col-span-3" />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="username" className="text-right">
+                  Username
+                </Label>
+                <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} className="col-span-3" />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="email" className="text-right">
-                  Email
+                  Email (Optional)
                 </Label>
                 <Input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} className="col-span-3" />
               </div>
@@ -277,6 +375,7 @@ const UserManagement: React.FC = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
+                <TableHead>Username</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -286,12 +385,17 @@ const UserManagement: React.FC = () => {
               {users.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell>{user.name}</TableCell>
-                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.username}</TableCell>
+                  <TableCell>{user.email || '-'}</TableCell>
                   <TableCell className="capitalize">{user.role}</TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="sm" onClick={() => editUser(user)}>
                       <Edit className="w-4 h-4 mr-2" />
                       Edit
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => openPasswordReset(user)}>
+                      <Key className="w-4 h-4 mr-2" />
+                      Reset Password
                     </Button>
                     <Button variant="ghost" size="sm" className="text-red-500" onClick={() => handleDeleteUser(user)}>
                       <Trash2 className="w-4 h-4 mr-2" />
@@ -307,9 +411,6 @@ const UserManagement: React.FC = () => {
 
       {/* Edit User Dialog */}
       <Dialog open={openEditDialog} onOpenChange={setOpenEditDialog}>
-        <DialogTrigger asChild>
-          <div></div>
-        </DialogTrigger>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Edit User</DialogTitle>
@@ -325,8 +426,14 @@ const UserManagement: React.FC = () => {
               <Input id="name" value={name} onChange={(e) => setName(e.target.value)} className="col-span-3" />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="username" className="text-right">
+                Username
+              </Label>
+              <Input id="username" value={username} onChange={(e) => setUsername(e.target.value)} className="col-span-3" />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="email" className="text-right">
-                Email
+                Email (Optional)
               </Label>
               <Input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} className="col-span-3" />
             </div>
@@ -381,6 +488,66 @@ const UserManagement: React.FC = () => {
                   Update
                 </>
               )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset Password Dialog */}
+      <Dialog open={openResetDialog} onOpenChange={setOpenResetDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Reset User Password</DialogTitle>
+            <DialogDescription>
+              Choose how to reset the password for {selectedUser?.name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-900">
+              <div className="flex items-start">
+                <Key className="w-5 h-5 mr-3 mt-0.5 text-primary" />
+                <div>
+                  <h3 className="font-medium">Set New Password</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                    Reset the user's password manually
+                  </p>
+                  <Button 
+                    onClick={handleResetPassword} 
+                    disabled={isResetting}
+                    variant="outline" 
+                    className="w-full"
+                  >
+                    {isResetting ? 'Resetting...' : 'Reset Password'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+            
+            {selectedUser?.email && (
+              <div className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-900">
+                <div className="flex items-start">
+                  <Mail className="w-5 h-5 mr-3 mt-0.5 text-primary" />
+                  <div>
+                    <h3 className="font-medium">Send Reset Link</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                      Send a password reset link to {selectedUser.email}
+                    </p>
+                    <Button 
+                      onClick={handleSendResetLink} 
+                      disabled={isResetting}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      {isResetting ? 'Sending...' : 'Send Reset Link'}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="secondary" onClick={() => setOpenResetDialog(false)}>
+              Cancel
             </Button>
           </DialogFooter>
         </DialogContent>

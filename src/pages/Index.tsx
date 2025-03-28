@@ -1,37 +1,11 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FileSignature, Upload, Shield, CheckSquare, Zap } from 'lucide-react';
+import { FileSignature, Upload, Shield, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { motion } from "framer-motion";
 
 const Index = () => {
-  const features = [
-    {
-      icon: <FileSignature className="w-10 h-10 text-primary" />,
-      title: 'Digital Signatures',
-      description: 'Sign PDF documents securely with your digital certificate',
-    },
-    {
-      icon: <Shield className="w-10 h-10 text-primary" />,
-      title: 'HSM Support',
-      description: 'Connect to Hardware Security Modules for enhanced security',
-    },
-    {
-      icon: <CheckSquare className="w-10 h-10 text-primary" />,
-      title: 'Audit Trails',
-      description: 'Comprehensive logging of all signing activities',
-    },
-    {
-      icon: <Zap className="w-10 h-10 text-primary" />,
-      title: 'Enterprise Ready',
-      description: 'Designed for high volume and security requirements',
-    }
-  ];
-
-  const MotionCard = motion(Card);
-
   return (
     <div className="space-y-12">
       <section className="text-center py-16 md:py-24 max-w-3xl mx-auto">
@@ -45,7 +19,7 @@ const Index = () => {
             <FileSignature className="w-10 h-10 text-primary" />
           </div>
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-            Enterprise-Grade Document Signing Solution
+            Leegality Bulk Signer On-prem
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
             Securely sign your PDF documents with PKCS #12 certificates or connect directly to your HSM device
@@ -67,49 +41,10 @@ const Index = () => {
         </motion.div>
       </section>
 
-      <section className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 py-12">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold">Key Features</h2>
-            <p className="text-gray-600 dark:text-gray-300 mt-2">Everything you need for secure document signing</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((feature, index) => (
-              <MotionCard 
-                key={feature.title} 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: index * 0.1 }}
-                className="border-0 shadow-sm"
-              >
-                <CardHeader className="flex items-center justify-center pt-6">
-                  <div className="bg-primary/10 p-4 rounded-full">
-                    {feature.icon}
-                  </div>
-                </CardHeader>
-                <CardContent className="text-center pt-4">
-                  <CardTitle className="text-xl mb-2">{feature.title}</CardTitle>
-                  <CardDescription>{feature.description}</CardDescription>
-                </CardContent>
-              </MotionCard>
-            ))}
-          </div>
-        </div>
-      </section>
-
       <section className="py-12">
-        <div className="container mx-auto px-4">
-          <div className="bg-primary/5 dark:bg-primary/10 rounded-xl p-8 md:p-12 border border-primary/10 dark:border-primary/20 shadow-sm">
-            <div className="max-w-3xl mx-auto text-center">
-              <h2 className="text-3xl font-bold mb-4">Ready to Get Started?</h2>
-              <p className="text-gray-600 dark:text-gray-300 mb-8">
-                Deploy our solution on your servers and start signing documents securely today.
-              </p>
-              <Button asChild size="xl" className="rounded-md px-8">
-                <Link to="/sign">Sign Your First Document</Link>
-              </Button>
-            </div>
-          </div>
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-2xl font-semibold mb-2">Grey Swift Private Limited</h2>
+          <p>Leegality Bulk Signer On-prem v1.0.0</p>
         </div>
       </section>
     </div>

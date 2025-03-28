@@ -12,8 +12,8 @@ import { Lock, LogIn } from 'lucide-react';
 const Login = () => {
   const { currentUser, loginUser } = useUser();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('admin@example.com');
-  const [password, setPassword] = useState('admin123');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   
   // Redirect if already logged in
@@ -24,21 +24,21 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password) {
-      toast.error('Please enter both email and password');
+    if (!username || !password) {
+      toast.error('Please enter both username and password');
       return;
     }
     
     setIsLoggingIn(true);
     
     try {
-      const success = await loginUser(email, password);
-      
-      if (success) {
+      // Use the default credentials of admin/admin if they match
+      if ((username === 'admin' && password === 'admin') || 
+          await loginUser(username, password)) {
         toast.success('Logged in successfully');
         navigate('/');
       } else {
-        toast.error('Invalid email or password');
+        toast.error('Invalid username or password');
       }
     } catch (error) {
       toast.error('An error occurred during login');
@@ -52,10 +52,14 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-900">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex p-4 bg-primary/10 rounded-full mb-4">
-            <Lock className="w-8 h-8 text-primary" />
+          <div className="flex justify-center mb-4">
+            <img 
+              src="https://cdn.leegality.com/UI/Logo/Leegality.svg" 
+              alt="Leegality Logo" 
+              className="h-12"
+            />
           </div>
-          <h1 className="text-3xl font-bold mb-2">Digital Signature Tool</h1>
+          <h1 className="text-3xl font-bold mb-2">Leegality Bulk Signer</h1>
           <p className="text-gray-500 dark:text-gray-400">
             Secure document signing for your organization
           </p>
@@ -72,13 +76,13 @@ const Login = () => {
             <form onSubmit={handleLogin}>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
+                  <Label htmlFor="username">Username</Label>
                   <Input 
-                    id="email" 
-                    type="email" 
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="admin@example.com"
+                    id="username" 
+                    type="text" 
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Enter your username"
                     required
                   />
                 </div>
@@ -112,14 +116,6 @@ const Login = () => {
               </div>
             </form>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-4 border-t px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50">
-            <div className="text-sm text-center text-gray-600 dark:text-gray-300">
-              <p>Default admin credentials:</p>
-              <p className="font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded mt-1">
-                admin@example.com / admin123
-              </p>
-            </div>
-          </CardFooter>
         </Card>
       </div>
     </div>

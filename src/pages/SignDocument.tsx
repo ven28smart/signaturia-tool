@@ -8,18 +8,21 @@ import {
   Info, 
   Download, 
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Copy
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { motion } from "framer-motion";
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import crypto from 'crypto';
 
 interface SignaturePosition {
   page: number;
@@ -29,34 +32,104 @@ interface SignaturePosition {
   height: number;
 }
 
+interface Certificate {
+  id: string;
+  name: string;
+  type: 'pkcs12' | 'hsm';
+  issuer: string;
+  validFrom: string;
+  validTo: string;
+  status: 'active' | 'expired' | 'revoked';
+  lastUsed?: string;
+}
+
+interface AuditRecord {
+  id: string;
+  timestamp: string;
+  documentId: string;
+  documentName: string;
+  documentSize: string;
+  documentHash: string;
+  action: 'signed' | 'failed' | 'viewed';
+  user: string;
+  certificateId: string;
+  certificateName: string;
+  details?: string;
+}
+
 const SignDocument = () => {
   const [file, setFile] = useState<File | null>(null);
-  const [signatureSource, setSignatureSource] = useState('pkcs12');
+  const [selectedCertificateId, setSelectedCertificateId] = useState<string>('');
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [positions, setPositions] = useState<SignaturePosition[]>([
     { page: 1, x: 100, y: 100, width: 200, height: 100 }
   ]);
   const [signedFile, setSignedFile] = useState<Uint8Array | null>(null);
   const [signedFileUrl, setSignedFileUrl] = useState<string | null>(null);
+  const [auditTrailUrl, setAuditTrailUrl] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [documentId, setDocumentId] = useState('');
+  const [documentHash, setDocumentHash] = useState('');
   const [signatureText, setSignatureText] = useState('');
   const [signatureReason, setSignatureReason] = useState('I approve this document');
   const [signatureLocation, setSignatureLocation] = useState('');
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Load certificates
+  useEffect(() => {
+    // In a real app, this would fetch certificates from the backend
+    // For this demo, we'll use a simulated certificate list
+    const sampleCertificates: Certificate[] = [
+      {
+        id: 'CERT1234',
+        name: 'Company Signing Certificate',
+        type: 'pkcs12',
+        issuer: 'DigiCert Inc',
+        validFrom: '2023-01-01',
+        validTo: '2024-01-01',
+        status: 'active',
+        lastUsed: '2023-10-15'
+      },
+      {
+        id: 'HSM98765',
+        name: 'HSM Signing Key',
+        type: 'hsm',
+        issuer: 'Hardware Security Module',
+        validFrom: '2023-01-01',
+        validTo: '2025-01-01',
+        status: 'active'
+      }
+    ];
+    
+    setCertificates(sampleCertificates);
+  }, []);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
       if (selectedFile.type !== 'application/pdf') {
-        toast({
-          variant: "destructive",
-          title: "Invalid file type",
-          description: "Please select a PDF file"
-        });
+        toast.error('Please select a PDF file');
         return;
       }
       setFile(selectedFile);
-      setDocumentId(`DOC-${Math.floor(Math.random() * 1000000).toString().padStart(6, '0')}`);
+      
+      // Generate a unique 16-character document ID
+      const randomId = generateRandomId(16);
+      setDocumentId(randomId);
+      
+      // Calculate SHA-256 hash of the document
+      const fileBuffer = await selectedFile.arrayBuffer();
+      const hash = crypto.createHash('sha256').update(Buffer.from(fileBuffer)).digest('hex');
+      setDocumentHash(hash);
     }
+  };
+
+  const generateRandomId = (length: number): string => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
   };
 
   const handleAddPosition = () => {
@@ -75,14 +148,126 @@ const SignDocument = () => {
     setPositions(newPositions);
   };
 
+  const handleCertificateChange = (certId: string) => {
+    setSelectedCertificateId(certId);
+  };
+
+  const createAuditTrailPdf = async () => {
+    if (!file) return null;
+    
+    // Create a new PDF document for the audit trail
+    const pdfDoc = await PDFDocument.create();
+    
+    // Add a page to the document
+    const page = pdfDoc.addPage([595, 842]); // A4 size
+    
+    // Load fonts
+    const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    
+    // Document dimensions
+    const { width, height } = page.getSize();
+    
+    // Draw header
+    page.drawText('DOCUMENT SIGNING AUDIT TRAIL', {
+      x: 50,
+      y: height - 50,
+      size: 16,
+      font: helveticaBold,
+      color: rgb(0, 0, 0),
+    });
+    
+    // Draw horizontal line
+    page.drawLine({
+      start: { x: 50, y: height - 70 },
+      end: { x: width - 50, y: height - 70 },
+      thickness: 1,
+      color: rgb(0, 0, 0),
+    });
+    
+    // Selected certificate
+    const selectedCertificate = certificates.find(cert => cert.id === selectedCertificateId);
+    
+    // Current date and time
+    const timestamp = new Date().toISOString();
+    
+    // Draw content
+    const drawSection = (title: string, y: number) => {
+      page.drawText(title, {
+        x: 50,
+        y,
+        size: 14,
+        font: helveticaBold,
+        color: rgb(0, 0, 0),
+      });
+      
+      page.drawLine({
+        start: { x: 50, y: y - 10 },
+        end: { x: width - 50, y: y - 10 },
+        thickness: 0.5,
+        color: rgb(0.5, 0.5, 0.5),
+      });
+      
+      return y - 40;
+    };
+    
+    const drawField = (label: string, value: string, y: number) => {
+      page.drawText(label, {
+        x: 50,
+        y,
+        size: 11,
+        font: helveticaBold,
+        color: rgb(0.3, 0.3, 0.3),
+      });
+      
+      page.drawText(value, {
+        x: 200,
+        y,
+        size: 11,
+        font: helveticaFont,
+        color: rgb(0, 0, 0),
+      });
+      
+      return y - 20;
+    };
+    
+    // Draw document information
+    let yPos = drawSection('DOCUMENT INFORMATION', height - 120);
+    yPos = drawField('Document ID:', documentId, yPos);
+    yPos = drawField('Document Name:', file.name, yPos);
+    yPos = drawField('Document Size:', `${(file.size / 1024).toFixed(2)} KB`, yPos);
+    yPos = drawField('Document Hash:', `SHA-256: ${documentHash.substring(0, 32)}...`, yPos);
+    
+    // Draw signature information
+    yPos = drawSection('SIGNATURE INFORMATION', yPos - 20);
+    yPos = drawField('Certificate ID:', selectedCertificate?.id || '', yPos);
+    yPos = drawField('Certificate Name:', selectedCertificate?.name || '', yPos);
+    yPos = drawField('Certificate Type:', selectedCertificate?.type.toUpperCase() || '', yPos);
+    yPos = drawField('Certificate Issuer:', selectedCertificate?.issuer || '', yPos);
+    yPos = drawField('Certificate Valid Until:', new Date(selectedCertificate?.validTo || '').toLocaleDateString(), yPos);
+    
+    // Draw signing information
+    yPos = drawSection('SIGNING DETAILS', yPos - 20);
+    yPos = drawField('Signed By:', 'Administrator', yPos);
+    yPos = drawField('Signed On:', new Date().toLocaleString(), yPos);
+    yPos = drawField('Signature Reason:', signatureReason || 'Not specified', yPos);
+    yPos = drawField('Signature Location:', signatureLocation || 'Not specified', yPos);
+    
+    // Save the audit trail PDF
+    const auditTrailPdfBytes = await pdfDoc.save();
+    
+    return auditTrailPdfBytes;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) {
-      toast({
-        variant: "destructive",
-        title: "No file selected",
-        description: "Please select a PDF file"
-      });
+      toast.error('Please select a PDF file');
+      return;
+    }
+    
+    if (!selectedCertificateId) {
+      toast.error('Please select a certificate');
       return;
     }
     
@@ -101,6 +286,9 @@ const SignDocument = () => {
       // Load a standard font
       const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
       const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+      
+      // Get selected certificate
+      const selectedCertificate = certificates.find(cert => cert.id === selectedCertificateId);
       
       // Add signature to all specified positions
       for (const position of positions) {
@@ -127,7 +315,7 @@ const SignDocument = () => {
         });
         
         // Add signature text
-        const signatureDisplayText = signatureText || 'Digitally signed by: ' + signatureSource.toUpperCase();
+        const signatureDisplayText = signatureText || `Digitally signed by: ${selectedCertificate?.name || 'Unknown'}`;
         page.drawText(signatureDisplayText, {
           x: position.x + 10,
           y: height - position.y - 30,
@@ -136,11 +324,20 @@ const SignDocument = () => {
           color: rgb(0, 0, 0),
         });
         
+        // Add certificate ID
+        page.drawText(`Certificate ID: ${selectedCertificate?.id || 'Unknown'}`, {
+          x: position.x + 10,
+          y: height - position.y - 45,
+          size: 8,
+          font: helveticaFont,
+          color: rgb(0, 0, 0),
+        });
+        
         // Add date
         const dateText = `Date: ${new Date().toLocaleDateString()}`;
         page.drawText(dateText, {
           x: position.x + 10,
-          y: height - position.y - 45,
+          y: height - position.y - 60,
           size: 8,
           font: helveticaFont,
           color: rgb(0, 0, 0),
@@ -150,7 +347,7 @@ const SignDocument = () => {
         if (signatureReason) {
           page.drawText(`Reason: ${signatureReason}`, {
             x: position.x + 10,
-            y: height - position.y - 60,
+            y: height - position.y - 75,
             size: 8,
             font: helveticaFont,
             color: rgb(0, 0, 0),
@@ -161,7 +358,7 @@ const SignDocument = () => {
         if (signatureLocation) {
           page.drawText(`Location: ${signatureLocation}`, {
             x: position.x + 10,
-            y: height - position.y - 75,
+            y: height - position.y - 90,
             size: 8,
             font: helveticaFont,
             color: rgb(0, 0, 0),
@@ -173,57 +370,91 @@ const SignDocument = () => {
       const signedPdfBytes = await pdfDoc.save();
       setSignedFile(signedPdfBytes);
       
-      // Create a URL for the signed PDF
-      const blob = new Blob([signedPdfBytes], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      setSignedFileUrl(url);
+      // Create audit trail PDF
+      const auditTrailPdfBytes = await createAuditTrailPdf();
+      
+      // Create URLs for the signed PDF and audit trail
+      const signedBlob = new Blob([signedPdfBytes], { type: 'application/pdf' });
+      const signedUrl = URL.createObjectURL(signedBlob);
+      setSignedFileUrl(signedUrl);
+      
+      if (auditTrailPdfBytes) {
+        const auditTrailBlob = new Blob([auditTrailPdfBytes], { type: 'application/pdf' });
+        const auditTrailUrl = URL.createObjectURL(auditTrailBlob);
+        setAuditTrailUrl(auditTrailUrl);
+      }
+      
+      // Create an audit log entry
+      const auditRecord: AuditRecord = {
+        id: `log-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        documentId,
+        documentName: file.name,
+        documentSize: `${(file.size / 1024).toFixed(2)} KB`,
+        documentHash,
+        action: 'signed',
+        user: 'Administrator',
+        certificateId: selectedCertificateId,
+        certificateName: selectedCertificate?.name || 'Unknown'
+      };
+      
+      // In a real app, this would be sent to the backend
+      console.log('Audit record created:', auditRecord);
       
       setIsProcessing(false);
-      toast({
-        title: "Success",
-        description: "Document signed successfully"
-      });
+      toast.success('Document signed successfully');
     } catch (error) {
       console.error('Error signing document:', error);
       setIsProcessing(false);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to sign document. Please try again."
-      });
+      toast.error('Failed to sign document. Please try again.');
     }
   };
 
   const handleDownloadDocument = () => {
     if (!signedFileUrl) {
-      toast({
-        variant: "destructive",
-        title: "No document",
-        description: "No signed document available for download"
-      });
+      toast.error('No signed document available for download');
       return;
     }
     
     try {
       const a = document.createElement('a');
       a.href = signedFileUrl;
-      a.download = `signed_document_${documentId}.pdf`;
+      a.download = `signed_${documentId}_${file?.name || 'document.pdf'}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       
-      toast({
-        title: "Success",
-        description: "Signed document downloaded successfully"
-      });
+      toast.success('Signed document downloaded successfully');
     } catch (error) {
       console.error('Error downloading document:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to download document"
-      });
+      toast.error('Failed to download document');
     }
+  };
+
+  const handleDownloadAuditTrail = () => {
+    if (!auditTrailUrl) {
+      toast.error('No audit trail available for download');
+      return;
+    }
+    
+    try {
+      const a = document.createElement('a');
+      a.href = auditTrailUrl;
+      a.download = `audit_trail_${documentId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+      toast.success('Audit trail downloaded successfully');
+    } catch (error) {
+      console.error('Error downloading audit trail:', error);
+      toast.error('Failed to download audit trail');
+    }
+  };
+
+  const handleCopyDocumentId = () => {
+    navigator.clipboard.writeText(documentId);
+    toast.success('Document ID copied to clipboard');
   };
 
   // Clean up URL objects when component unmounts
@@ -232,8 +463,11 @@ const SignDocument = () => {
       if (signedFileUrl) {
         URL.revokeObjectURL(signedFileUrl);
       }
+      if (auditTrailUrl) {
+        URL.revokeObjectURL(auditTrailUrl);
+      }
     };
-  }, [signedFileUrl]);
+  }, [signedFileUrl, auditTrailUrl]);
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -267,9 +501,21 @@ const SignDocument = () => {
                         <div className="space-y-2">
                           <CheckCircle className="w-8 h-8 text-green-500 mx-auto" />
                           <p className="text-sm font-medium">{file.name}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {(file.size / 1024 / 1024).toFixed(2)} MB • Document ID: {documentId}
-                          </p>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            <p>{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                            <div className="flex items-center justify-center mt-1">
+                              <span className="font-mono">Document ID: {documentId}</span>
+                              <Button 
+                                type="button" 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-5 w-5 ml-1"
+                                onClick={handleCopyDocumentId}
+                              >
+                                <Copy className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
                           <Button 
                             type="button" 
                             variant="outline" 
@@ -300,17 +546,49 @@ const SignDocument = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Signature Source</Label>
-                    <RadioGroup defaultValue="pkcs12" value={signatureSource} onValueChange={setSignatureSource} className="flex space-x-4">
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="pkcs12" id="pkcs12" />
-                        <Label htmlFor="pkcs12">PKCS #12 Certificate</Label>
+                    <Label htmlFor="certificate">Select Certificate</Label>
+                    <Select value={selectedCertificateId} onValueChange={handleCertificateChange}>
+                      <SelectTrigger id="certificate">
+                        <SelectValue placeholder="Choose a certificate" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {certificates.map((cert) => (
+                          <SelectItem key={cert.id} value={cert.id}>
+                            {cert.name} ({cert.id})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    
+                    {selectedCertificateId && (
+                      <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-md text-sm">
+                        {(() => {
+                          const cert = certificates.find(c => c.id === selectedCertificateId);
+                          if (!cert) return null;
+                          
+                          return (
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <span className="text-gray-500 dark:text-gray-400">Type: </span>
+                                <span>{cert.type === 'pkcs12' ? 'PKCS #12' : 'HSM'}</span>
+                              </div>
+                              <div>
+                                <span className="text-gray-500 dark:text-gray-400">Issuer: </span>
+                                <span>{cert.issuer}</span>
+                              </div>
+                              <div>
+                                <span className="text-gray-500 dark:text-gray-400">Valid From: </span>
+                                <span>{new Date(cert.validFrom).toLocaleDateString()}</span>
+                              </div>
+                              <div>
+                                <span className="text-gray-500 dark:text-gray-400">Valid To: </span>
+                                <span>{new Date(cert.validTo).toLocaleDateString()}</span>
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="hsm" id="hsm" />
-                        <Label htmlFor="hsm">HSM Device</Label>
-                      </div>
-                    </RadioGroup>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -416,7 +694,7 @@ const SignDocument = () => {
                         <Label htmlFor="signature-location">Signature Location</Label>
                         <Input 
                           id="signature-location" 
-                          placeholder="San Francisco, CA" 
+                          placeholder="New Delhi, India" 
                           value={signatureLocation}
                           onChange={(e) => setSignatureLocation(e.target.value)}
                         />
@@ -426,7 +704,7 @@ const SignDocument = () => {
                 </div>
 
                 <div className="mt-6 flex justify-end">
-                  <Button type="submit" className="gap-2" disabled={!file || isProcessing}>
+                  <Button type="submit" className="gap-2" disabled={!file || !selectedCertificateId || isProcessing}>
                     {isProcessing ? (
                       <>
                         <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
@@ -466,7 +744,15 @@ const SignDocument = () => {
                 <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 mt-4 text-left">
                   <div className="mb-2">
                     <span className="text-sm font-medium">Document ID:</span>{" "}
-                    <span className="text-sm text-gray-600 dark:text-gray-300">{documentId}</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-300 font-mono">{documentId}</span>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-6 w-6 ml-1"
+                      onClick={handleCopyDocumentId}
+                    >
+                      <Copy className="h-3 w-3" />
+                    </Button>
                   </div>
                   <div className="mb-2">
                     <span className="text-sm font-medium">Signed On:</span>{" "}
@@ -475,7 +761,13 @@ const SignDocument = () => {
                   <div className="mb-2">
                     <span className="text-sm font-medium">Certificate:</span>{" "}
                     <span className="text-sm text-gray-600 dark:text-gray-300">
-                      {signatureSource === 'pkcs12' ? 'PKCS #12 Certificate' : 'HSM Certificate'}
+                      {certificates.find(c => c.id === selectedCertificateId)?.name || 'Unknown'} ({selectedCertificateId})
+                    </span>
+                  </div>
+                  <div className="mb-2">
+                    <span className="text-sm font-medium">Document Hash:</span>{" "}
+                    <span className="text-sm text-gray-600 dark:text-gray-300 font-mono">
+                      {documentHash.substring(0, 16)}...
                     </span>
                   </div>
                 </div>
@@ -484,10 +776,16 @@ const SignDocument = () => {
                     <Download className="w-4 h-4" />
                     Download Signed Document
                   </Button>
-                  <Button variant="outline" onClick={() => {
+                  <Button variant="outline" className="gap-2" onClick={handleDownloadAuditTrail}>
+                    <FileText className="w-4 h-4" />
+                    Download Audit Trail
+                  </Button>
+                  <Button variant="secondary" onClick={() => {
                     setSignedFile(null);
                     setSignedFileUrl(null);
+                    setAuditTrailUrl(null);
                     setFile(null);
+                    setDocumentId('');
                   }}>
                     Sign Another Document
                   </Button>

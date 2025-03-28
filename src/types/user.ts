@@ -1,3 +1,4 @@
+
 export type UserRole = 'admin' | 'manager' | 'user' | 'viewer';
 
 export interface Permission {
@@ -16,7 +17,8 @@ export interface License {
 
 export interface User {
   id: string;
-  email: string;
+  email?: string; // Make email optional
+  username: string; // Add username field
   name: string;
   role: UserRole;
   permissions: string[];

@@ -14,19 +14,13 @@ import Settings from "./pages/Settings";
 import { UserProvider, useUser } from "./contexts/UserContext";
 import UserManagement from "./pages/UserManagement";
 import Login from "./pages/Login";
+import Profile from "./pages/Profile";
+import { cn } from "@/lib/utils";
+import ApiDocumentation from "./pages/ApiDocumentation";
+import AdminReadme from "./pages/AdminReadme";
+import UserReadme from "./pages/UserReadme";
 
-// Create a global license checker window function
-declare global {
-  interface Window {
-    checkLicenseForSigning?: () => boolean;
-  }
-}
-
-// Initialize license checker to always return true
-if (typeof window !== 'undefined') {
-  window.checkLicenseForSigning = () => true;
-}
-
+// Initialize the query client for API requests
 const queryClient = new QueryClient();
 
 // Protected route component
@@ -61,6 +55,10 @@ const App = () => (
               <Route path="/audit" element={<AuditLogs />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/users" element={<UserManagement />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/api-docs" element={<ApiDocumentation />} />
+              <Route path="/admin-readme" element={<AdminReadme />} />
+              <Route path="/user-readme" element={<UserReadme />} />
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   History, 
   FileText, 
@@ -26,12 +26,16 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { motion } from "framer-motion";
 import { Separator } from '@/components/ui/separator';
+import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { addDays, startOfMonth, endOfMonth, format } from "date-fns";
 
 interface AuditRecord {
   id: string;
   timestamp: string;
   documentId: string;
   documentName: string;
+  documentSize: string;
+  documentHash: string;
   action: 'signed' | 'failed' | 'viewed';
   user: string;
   certificateId: string;
@@ -40,33 +44,15 @@ interface AuditRecord {
 }
 
 const AuditLogs = () => {
-  // Mock audit logs data
-  const generateMockData = (): AuditRecord[] => {
-    const actions: AuditRecord['action'][] = ['signed', 'failed', 'viewed'];
-    const results: AuditRecord[] = [];
-    
-    for (let i = 0; i < 20; i++) {
-      const action = actions[Math.floor(Math.random() * actions.length)];
-      
-      results.push({
-        id: `log-${1000 + i}`,
-        timestamp: new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000).toISOString(),
-        documentId: `DOC-${Math.floor(Math.random() * 1000)}`,
-        documentName: `Document-${Math.floor(Math.random() * 100)}.pdf`,
-        action,
-        user: `user${Math.floor(Math.random() * 5) + 1}@example.com`,
-        certificateId: `cert-${Math.floor(Math.random() * 10)}`,
-        certificateName: action === 'signed' ? 'Company Signing Certificate' : '-',
-        details: action === 'failed' ? 'Invalid certificate password' : undefined
-      });
-    }
-    
-    return results.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-  };
-  
-  const [auditLogs, setAuditLogs] = useState<AuditRecord[]>(generateMockData());
+  const [auditLogs, setAuditLogs] = useState<AuditRecord[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [actionFilter, setActionFilter] = useState<AuditRecord['action'] | 'all'>('all');
+  const [dateRange, setDateRange] = useState({
+    from: startOfMonth(new Date()),
+    to: endOfMonth(new Date())
+  });
+
+  // No dummy data initially - will be populated as documents are signed
   
   const filteredLogs = auditLogs.filter(log => {
     const matchesSearch = 
@@ -76,7 +62,12 @@ const AuditLogs = () => {
       
     const matchesAction = actionFilter === 'all' || log.action === actionFilter;
     
-    return matchesSearch && matchesAction;
+    const logDate = new Date(log.timestamp);
+    const matchesDate = 
+      (!dateRange.from || logDate >= dateRange.from) && 
+      (!dateRange.to || logDate <= dateRange.to);
+    
+    return matchesSearch && matchesAction && matchesDate;
   });
   
   const getActionBadge = (action: AuditRecord['action']) => {
@@ -105,6 +96,15 @@ const AuditLogs = () => {
     }
   };
 
+  const handleExportExcel = () => {
+    // In a real app, this would generate and download an Excel file
+    // For this demo, we'll simulate success
+    setTimeout(() => {
+      const fileName = `audit_logs_${format(dateRange.from || new Date(), 'yyyy-MM-dd')}_to_${format(dateRange.to || new Date(), 'yyyy-MM-dd')}.xlsx`;
+      alert(`Exporting ${filteredLogs.length} logs to ${fileName}`);
+    }, 500);
+  };
+
   return (
     <div className="max-w-6xl mx-auto">
       <motion.div
@@ -121,7 +121,7 @@ const AuditLogs = () => {
 
         <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-md shadow-sm mb-6">
           <CardHeader className="pb-2">
-            <CardTitle>Document Signing Audit Trail</CardTitle>
+            <CardTitle>Document Signing Audit Logs</CardTitle>
             <CardDescription>
               Complete record of all document signing activities
             </CardDescription>
@@ -137,7 +137,7 @@ const AuditLogs = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" className="gap-2">
@@ -164,14 +164,14 @@ const AuditLogs = () => {
                   </DropdownMenuContent>
                 </DropdownMenu>
                 
-                <Button variant="outline" className="gap-2">
-                  <Calendar size={16} />
-                  <span>Date Range</span>
-                </Button>
+                <DateRangePicker
+                  value={dateRange}
+                  onChange={setDateRange}
+                />
                 
-                <Button variant="outline" className="gap-2">
+                <Button variant="outline" className="gap-2" onClick={handleExportExcel}>
                   <Download size={16} />
-                  <span>Export</span>
+                  <span>Export Excel</span>
                 </Button>
               </div>
             </div>
@@ -213,6 +213,14 @@ const AuditLogs = () => {
                             <div>
                               <span className="text-gray-500 dark:text-gray-400">User: </span>
                               <span>{log.user}</span>
+                            </div>
+                            <div>
+                              <span className="text-gray-500 dark:text-gray-400">Size: </span>
+                              <span>{log.documentSize}</span>
+                            </div>
+                            <div>
+                              <span className="text-gray-500 dark:text-gray-400">Hash: </span>
+                              <span className="font-mono text-xs">{log.documentHash.substring(0, 12)}...</span>
                             </div>
                             {log.action === 'signed' && (
                               <div>

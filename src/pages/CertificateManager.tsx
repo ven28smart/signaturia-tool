@@ -41,18 +41,7 @@ interface Certificate {
 }
 
 const CertificateManager = () => {
-  const [certificates, setCertificates] = useState<Certificate[]>([
-    {
-      id: 'cert-001',
-      name: 'Company Signing Certificate',
-      type: 'pkcs12',
-      issuer: 'DigiCert Inc',
-      validFrom: '2023-01-01',
-      validTo: '2024-01-01',
-      status: 'active',
-      lastUsed: '2023-10-15'
-    }
-  ]);
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
   
   const [file, setFile] = useState<File | null>(null);
   const [password, setPassword] = useState('');
@@ -70,6 +59,15 @@ const CertificateManager = () => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
     }
+  };
+
+  const generateRandomId = (prefix: string) => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = prefix;
+    for (let i = 0; i < 6; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
   };
 
   const handleUploadCertificate = (e: React.FormEvent) => {
@@ -94,7 +92,7 @@ const CertificateManager = () => {
     // Mock upload process
     setTimeout(() => {
       const newCertificate: Certificate = {
-        id: `cert-${Math.floor(Math.random() * 1000)}`,
+        id: generateRandomId('CERT'),
         name: certificateName,
         type: 'pkcs12',
         issuer: 'Uploaded Certificate Authority',
@@ -125,7 +123,7 @@ const CertificateManager = () => {
     // Mock connection test
     setTimeout(() => {
       const newCertificate: Certificate = {
-        id: `hsm-${Math.floor(Math.random() * 1000)}`,
+        id: generateRandomId('HSM'),
         name: hsmName,
         type: 'hsm',
         issuer: 'Hardware Security Module',
@@ -179,8 +177,8 @@ const CertificateManager = () => {
         transition={{ duration: 0.4 }}
       >
         <div className="flex items-center mb-6">
-          <div className="p-2 bg-primary-50 rounded-full mr-3">
-            <FileCheck className="w-6 h-6 text-primary-500" />
+          <div className="p-2 bg-primary/10 rounded-full mr-3">
+            <FileCheck className="w-6 h-6 text-primary" />
           </div>
           <h1 className="text-3xl font-bold">Certificate Manager</h1>
         </div>
@@ -223,11 +221,11 @@ const CertificateManager = () => {
                       >
                         <div className="flex justify-between">
                           <div className="flex items-start gap-3">
-                            <div className="p-2 bg-primary-50 rounded-full">
+                            <div className="p-2 bg-primary/10 rounded-full">
                               {cert.type === 'pkcs12' ? (
-                                <FileCheck className="w-5 h-5 text-primary-500" />
+                                <FileCheck className="w-5 h-5 text-primary" />
                               ) : (
-                                <Server className="w-5 h-5 text-primary-500" />
+                                <Server className="w-5 h-5 text-primary" />
                               )}
                             </div>
                             <div>
@@ -240,16 +238,16 @@ const CertificateManager = () => {
                               </p>
                               <div className="grid grid-cols-2 gap-x-8 gap-y-1 mt-2 text-sm">
                                 <div>
+                                  <span className="text-gray-500 dark:text-gray-400">ID: </span>
+                                  <span className="font-mono">{cert.id}</span>
+                                </div>
+                                <div>
                                   <span className="text-gray-500 dark:text-gray-400">Issuer: </span>
                                   <span>{cert.issuer}</span>
                                 </div>
                                 <div>
                                   <span className="text-gray-500 dark:text-gray-400">Valid From: </span>
                                   <span>{new Date(cert.validFrom).toLocaleDateString()}</span>
-                                </div>
-                                <div>
-                                  <span className="text-gray-500 dark:text-gray-400">ID: </span>
-                                  <span className="font-mono text-xs">{cert.id}</span>
                                 </div>
                                 <div>
                                   <span className="text-gray-500 dark:text-gray-400">Valid To: </span>
@@ -352,7 +350,7 @@ const CertificateManager = () => {
                       </div>
                       
                       <div className="flex justify-end">
-                        <Button type="submit" className="gap-2 bg-primary-500 hover:bg-primary-600" disabled={isUploading}>
+                        <Button type="submit" className="gap-2" disabled={isUploading}>
                           {isUploading ? (
                             <>
                               <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
@@ -413,7 +411,7 @@ const CertificateManager = () => {
                       </div>
                       
                       <div className="flex justify-end">
-                        <Button type="submit" className="gap-2 bg-primary-500 hover:bg-primary-600" disabled={isTestingConnection}>
+                        <Button type="submit" className="gap-2" disabled={isTestingConnection}>
                           {isTestingConnection ? (
                             <>
                               <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
