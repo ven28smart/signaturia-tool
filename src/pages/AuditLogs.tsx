@@ -28,6 +28,7 @@ import { motion } from "framer-motion";
 import { Separator } from '@/components/ui/separator';
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { addDays, startOfMonth, endOfMonth, format } from "date-fns";
+import type { DateRange } from "react-day-picker";
 
 interface AuditRecord {
   id: string;
@@ -47,7 +48,7 @@ const AuditLogs = () => {
   const [auditLogs, setAuditLogs] = useState<AuditRecord[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [actionFilter, setActionFilter] = useState<AuditRecord['action'] | 'all'>('all');
-  const [dateRange, setDateRange] = useState({
+  const [dateRange, setDateRange] = useState<DateRange>({
     from: startOfMonth(new Date()),
     to: endOfMonth(new Date())
   });
@@ -166,7 +167,7 @@ const AuditLogs = () => {
                 
                 <DateRangePicker
                   value={dateRange}
-                  onChange={setDateRange}
+                  onChange={(range: DateRange) => setDateRange(range)}
                 />
                 
                 <Button variant="outline" className="gap-2" onClick={handleExportExcel}>
