@@ -15,7 +15,7 @@ const Layout = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Sidebar collapsed={sidebarCollapsed} toggleSidebar={toggleSidebar} />
-      <TopNavigation />
+      <TopNavigation sidebarCollapsed={sidebarCollapsed} />
       
       <main className={cn(
         "transition-all duration-300 pt-16 pb-16 px-4 sm:px-6 lg:px-8",

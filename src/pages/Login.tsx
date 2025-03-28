@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useUser } from '@/contexts/UserContext';
 import { toast } from 'sonner';
-import { Lock, LogIn } from 'lucide-react';
+import { LogIn } from 'lucide-react';
 
 const Login = () => {
   const { currentUser, loginUser } = useUser();
@@ -24,6 +24,7 @@ const Login = () => {
   
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Login attempt started for user:", username);
     
     if (!username || !password) {
       toast.error('Please enter both username and password');
@@ -33,9 +34,9 @@ const Login = () => {
     setIsLoggingIn(true);
     
     try {
-      // Use the default credentials of admin/admin if they match
-      const success = (username === 'admin' && password === 'admin') || 
-                      await loginUser(username, password);
+      console.log("Calling loginUser function with:", username);
+      const success = await loginUser(username, password);
+      console.log("Login result:", success);
                       
       if (success) {
         toast.success('Logged in successfully');
@@ -43,14 +44,16 @@ const Login = () => {
         
         // Force a small delay to ensure the auth state is updated
         setTimeout(() => {
-          navigate('/');
-        }, 100);
+          console.log("Redirecting to homepage after delay");
+          navigate("/", { replace: true });
+        }, 500);
       } else {
         toast.error('Invalid username or password');
+        console.log("Login failed - invalid credentials");
       }
     } catch (error) {
       toast.error('An error occurred during login');
-      console.error(error);
+      console.error("Login error:", error);
     } finally {
       setIsLoggingIn(false);
     }
@@ -62,12 +65,12 @@ const Login = () => {
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
             <img 
-              src="https://cdn.leegality.com/UI/Logo/Leegality.svg" 
+              src="https://www.leegality.com/static/media/logo_vertical_dark.024be63e.svg" 
               alt="Leegality Logo" 
-              className="h-12"
+              className="h-16"
             />
           </div>
-          <h1 className="text-3xl font-bold mb-2">Leegality Bulk Signer</h1>
+          <h1 className="text-3xl font-bold mb-2" style={{ color: '#7f56d9' }}>Leegality Bulk Signer On-prem</h1>
           <p className="text-gray-500 dark:text-gray-400">
             Secure document signing for your organization
           </p>
@@ -108,7 +111,9 @@ const Login = () => {
                   />
                 </div>
                 
-                <Button type="submit" className="w-full" disabled={isLoggingIn}>
+                <Button type="submit" className="w-full" 
+                        style={{ backgroundColor: '#7f56d9' }}
+                        disabled={isLoggingIn}>
                   {isLoggingIn ? (
                     <>
                       <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />

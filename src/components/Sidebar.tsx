@@ -27,12 +27,13 @@ const Sidebar = ({ collapsed, toggleSidebar }: SidebarProps) => {
   );
 
   return (
-    <div className={cn("sidebar", collapsed && "sidebar-collapsed")}>
+    <div className={cn("sidebar fixed left-0 top-0 h-full w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 z-20 transition-all duration-300", 
+              collapsed && "w-16")} style={{ fontFamily: 'Lato, Raleway, HelveticaNeue, "Helvetica Neue", Helvetica, Arial, sans-serif' }}>
       <div className="flex flex-col h-full">
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
           {!collapsed && (
             <div className="flex items-center">
-              <img src="https://cdn.leegality.com/UI/Logo/Leegality.svg" alt="Leegality Logo" className="h-8 mr-2" />
+              <img src="https://www.leegality.com/static/media/logo_vertical_dark.024be63e.svg" alt="Leegality Logo" className="h-8 mr-2" />
               <span className="font-semibold text-sm">Bulk Signer</span>
             </div>
           )}
@@ -53,11 +54,14 @@ const Sidebar = ({ collapsed, toggleSidebar }: SidebarProps) => {
                 key={item.path}
                 to={item.path}
                 className={({ isActive }) => cn(
-                  "sidebar-item",
-                  isActive && "active"
+                  "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors",
+                  isActive 
+                    ? "bg-[#7f56d9] text-white" 
+                    : "text-gray-700 hover:text-[#7f56d9] hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800",
+                  collapsed && "justify-center"
                 )}
               >
-                <span className="mr-3">{item.icon}</span>
+                <span className={cn("", collapsed ? "mr-0" : "mr-3")}>{item.icon}</span>
                 {!collapsed && <span>{item.name}</span>}
               </NavLink>
             ))}

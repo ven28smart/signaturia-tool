@@ -74,15 +74,19 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   useEffect(() => {
     // Load saved user on startup
+    console.log("UserContext: Loading saved user on startup");
     const savedUser = localStorage.getItem('currentUser');
     if (savedUser) {
       try {
-        setCurrentUser(JSON.parse(savedUser));
-        console.log("Loaded user from localStorage", JSON.parse(savedUser));
+        const parsedUser = JSON.parse(savedUser);
+        setCurrentUser(parsedUser);
+        console.log("UserContext: Loaded user from localStorage", parsedUser);
       } catch (e) {
-        console.error("Failed to parse saved user", e);
+        console.error("UserContext: Failed to parse saved user", e);
         localStorage.removeItem('currentUser');
       }
+    } else {
+      console.log("UserContext: No saved user found in localStorage");
     }
     
     // Load saved users list
@@ -91,7 +95,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         setUsers(JSON.parse(savedUsers));
       } catch (e) {
-        console.error("Failed to parse saved users", e);
+        console.error("UserContext: Failed to parse saved users", e);
         localStorage.setItem('users', JSON.stringify(initialUsers));
       }
     } else {
@@ -100,7 +104,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
   
   const loginUser = async (username: string, password: string): Promise<boolean> => {
-    console.log("Attempting login for:", username);
+    console.log("UserContext: Attempting login for:", username);
     
     // Admin login
     if (username === 'admin' && password === 'admin') {
@@ -111,7 +115,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           lastLogin: new Date().toISOString()
         };
         
-        console.log("Admin login successful, setting current user", updatedUser);
+        console.log("UserContext: Admin login successful, setting current user", updatedUser);
         setCurrentUser(updatedUser);
         localStorage.setItem('currentUser', JSON.stringify(updatedUser));
         
@@ -131,7 +135,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         lastLogin: new Date().toISOString()
       };
       
-      console.log("User login successful, setting current user", updatedUser);
+      console.log("UserContext: User login successful, setting current user", updatedUser);
       setCurrentUser(updatedUser);
       localStorage.setItem('currentUser', JSON.stringify(updatedUser));
       
@@ -141,7 +145,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return true;
     }
     
-    console.log("Login failed for:", username);
+    console.log("UserContext: Login failed for:", username);
     return false;
   };
   

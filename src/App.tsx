@@ -29,9 +29,17 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   
   console.log("ProtectedRoute check - Current user:", currentUser, "Path:", location.pathname);
   
+  // Added an effect to run login status check after render to avoid synchronization issues
+  React.useEffect(() => {
+    console.log("ProtectedRoute effect - Current user:", currentUser, "Path:", location.pathname);
+    if (!currentUser) {
+      console.log("No user found, app should redirect to login");
+    }
+  }, [currentUser, location.pathname]);
+  
   if (!currentUser) {
     console.log("No user found, redirecting to login");
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" replace state={{ from: location }} />;
   }
   
   console.log("User authenticated, rendering protected content");
